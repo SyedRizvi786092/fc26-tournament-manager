@@ -1,10 +1,9 @@
 import useStore from '../store/useStore.js';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { useToast } from '../contexts/ToastContext.jsx';
-import { uid } from '../logic/uid.js';
 import { createSuspensions, resolvePendingSuspensions, serveFixtureSuspensions } from '../logic/suspensions.js';
 import { createPlayoffs, resolveEliminator } from '../logic/playoffs.js';
-import { saveTournament, addToHistory, clearActiveTournament } from '../services/firestoreService.js';
+import { saveTournament } from '../services/firestoreService.js';
 import AppHeader from '../components/layout/AppHeader.jsx';
 import AppFooter from '../components/layout/AppFooter.jsx';
 import StandingsTable from '../components/tournament/StandingsTable.jsx';
@@ -71,27 +70,6 @@ export default function MainPage() {
 
     await saveTournament(t);
     toast('Result saved ✓', 'ok');
-  };
-
-  const handleNewTournament = () => {
-    openModal({
-      type: 'confirm',
-      title: '🔄 New Tournament',
-      msg: tournament.status === 'complete'
-        ? 'Archive this completed tournament and start fresh?'
-        : 'Leave this tournament in progress? It will be saved in history so you can resume it later.',
-      onConfirm: async () => {
-        await addToHistory({ ...tournament });
-        await clearActiveTournament();
-        toast('Tournament archived ✓', 'ok');
-      },
-    });
-  };
-
-  // Expose handleNew to AppHeader via modal action
-  const handleModalAction = (modal) => {
-    if (modal?.action === 'newTournament') handleNewTournament();
-    else openModal(modal);
   };
 
   const content = {

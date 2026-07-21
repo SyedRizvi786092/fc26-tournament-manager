@@ -1,10 +1,13 @@
 import useStore from '../../store/useStore.js';
 import { useAuth } from '../../contexts/AuthContext.jsx';
+import { useToast } from '../../contexts/ToastContext.jsx';
+import { addToHistory, clearActiveTournament } from '../../services/firestoreService.js';
 import LiveIndicator from '../ui/LiveIndicator.jsx';
 
 export default function AppHeader() {
   const { tournament, view, setView, goToProfiles, goToStats, openModal } = useStore();
-  const { isAdmin, signOut } = useAuth();
+  const { isAdmin } = useAuth();
+  const toast = useToast();
 
   if (!tournament) return null;
 
@@ -31,7 +34,16 @@ export default function AppHeader() {
       msg: t.status === 'complete'
         ? 'Archive this completed tournament and start fresh? You can view its results anytime in history.'
         : 'Leave this tournament in progress and start fresh? It will be saved as "In Progress" in history.',
-      action: 'newTournament',
+      onConfirm: async () => {
+        try {
+          await addToHistory({ ...t });
+          await clearActiveTournament();
+          toast('Tournament archived to history ✓', 'ok');
+        } catch (err) {
+          console.error(err);
+          toast('Failed to archive tournament', 'err');
+        }
+      },
     });
   };
 
