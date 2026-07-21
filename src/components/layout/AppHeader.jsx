@@ -68,22 +68,23 @@ export default function AppHeader() {
     <header className="app-header">
       <div className="header-top">
         <div className="header-brand">
-          <button className="btn btn-sm btn-secondary" onClick={handleBackToHub} style={{ marginRight: 6 }}>
+          <button className="btn btn-sm btn-secondary nav-home-btn" onClick={handleBackToHub}>
             ← Home
           </button>
-          <div className="header-logo">⚽</div>
-          <div>
+          <div className="header-brand-info">
             <div className="header-name">{t.name}</div>
             <div className="header-status" style={{ color: statusColor }}>{statusLabel}</div>
           </div>
         </div>
         <div className="header-actions">
           <LiveIndicator />
-          <button className="btn btn-sm btn-secondary" onClick={goToStats}>📊 Stats</button>
-          <button className="btn btn-sm btn-secondary" onClick={goToProfiles}>⚙️ Teams</button>
-          {isAdmin && (
-            <button className="btn btn-sm btn-danger" onClick={handleNew}> Archive</button>
-          )}
+          <div className="header-action-btns">
+            <button className="btn btn-sm btn-secondary" onClick={goToStats}>📊 Stats</button>
+            <button className="btn btn-sm btn-secondary" onClick={goToProfiles}>⚙️ Teams</button>
+            {isAdmin && (
+              <button className="btn btn-sm btn-danger" onClick={handleNew}> Archive</button>
+            )}
+          </div>
         </div>
       </div>
       <div className="header-progress">
