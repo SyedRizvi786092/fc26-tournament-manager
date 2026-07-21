@@ -1,0 +1,47 @@
+// Firestore Security Rules
+// Deploy via: Firebase Console → Firestore → Rules tab
+// Or: firebase deploy --only firestore:rules (requires Firebase CLI)
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper: check if requester is the registered admin
+    function isAdmin() {
+      return request.auth != null &&
+        request.auth.uid == get(/databases/$(database)/documents/config/settings).data.adminUid;
+    }
+
+    // Helper: any authenticated user
+    function isAuthed() {
+      return request.auth != null;
+    }
+
+    // Config doc (stores adminUid)
+    // Anyone authed can read; only admin can write (or nobody yet = first-time setup)
+    match /config/settings {
+      allow read: if isAuthed();
+      // Allow write if admin, OR if no adminUid is set yet (first-time setup)
+      allow write: if isAdmin() ||
+        (isAuthed() && !exists(/databases/$(database)/documents/config/settings));
+    }
+
+    // Active tournament — real-time shared document
+    match /tournaments/{id} {
+      allow read: if isAuthed();
+      allow write: if isAdmin();
+    }
+
+    // History collection
+    match /history/{id} {
+      allow read: if isAuthed();
+      allow write: if isAdmin();
+    }
+
+    // Team profiles collection
+    match /profiles/{id} {
+      allow read: if isAuthed();
+      allow write: if isAdmin();
+    }
+  }
+}
