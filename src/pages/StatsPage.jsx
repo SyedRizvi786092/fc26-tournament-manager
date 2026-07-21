@@ -40,13 +40,13 @@ function getManagerStats(history) {
 }
 
 export default function StatsPage() {
-  const { history, backFromStats } = useStore();
+  const { history, goToHub } = useStore();
   const stats = getManagerStats(history);
 
   return (
     <div className="profiles-page">
       <div className="profiles-hdr">
-        <button className="btn btn-sm btn-secondary" onClick={backFromStats}>← Back</button>
+        <button className="btn btn-sm btn-secondary" onClick={goToHub}>← Home</button>
         <span className="profiles-hdr-title">Manager Leaderboard &amp; Stats</span>
       </div>
 

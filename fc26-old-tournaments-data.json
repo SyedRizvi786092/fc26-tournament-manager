@@ -1,0 +1,1545 @@
+{
+  "tournament": null,
+  "history": [
+    {
+      "id": "mrrwguhpvjaoh",
+      "name": "Tournament 9",
+      "status": "complete",
+      "legs": 1,
+      "players": [
+        {
+          "id": "mrrwguhmdoqjm",
+          "name": "Mojiz",
+          "teamName": "Manchester City",
+          "squad": [
+            {
+              "id": "mrrwguhmqb3i4",
+              "name": "Cristiano Ronaldo"
+            },
+            {
+              "id": "mrrwguhmjr8yf",
+              "name": "Lamine Yamal"
+            },
+            {
+              "id": "mrrwguhm4hneu",
+              "name": "Josko Gvardiol"
+            },
+            {
+              "id": "mrrwguhmfv7f5",
+              "name": "Thibaut Courtois"
+            },
+            {
+              "id": "mrrwguhmghwlb",
+              "name": "Ousmane Dembele"
+            },
+            {
+              "id": "mrrwguhmt8tu6",
+              "name": "Joshua Kimmich"
+            },
+            {
+              "id": "mrrwguhmb8a5x",
+              "name": "Aymeric Laporte"
+            },
+            {
+              "id": "mrrwguhmlmley",
+              "name": "Alejandro Grimaldo"
+            },
+            {
+              "id": "mrrwguhmmgy5p",
+              "name": "Jamal Musiala"
+            },
+            {
+              "id": "mrrwguhmwq0t5",
+              "name": "Dani Carvajal"
+            },
+            {
+              "id": "mrrwguhmhe703",
+              "name": "Marquinhos"
+            },
+            {
+              "id": "mrrwguhmm7ogl",
+              "name": "Jonathan Tah"
+            },
+            {
+              "id": "mrrwguhm1zpiq",
+              "name": "Vitinha"
+            },
+            {
+              "id": "mrrwguhm2cium",
+              "name": "Marcos Llorente"
+            },
+            {
+              "id": "mrrwguhmm5ww4",
+              "name": "Serhou Guirassy"
+            },
+            {
+              "id": "mrrwguhm7dlo0",
+              "name": "Unai Simon"
+            }
+          ]
+        },
+        {
+          "id": "mrrwguhmozx3z",
+          "name": "Haider",
+          "teamName": "FC Barcelona",
+          "squad": [
+            {
+              "id": "mrrwguhmw7ndu",
+              "name": "Erling Haaland"
+            },
+            {
+              "id": "mrrwguhmx3wm4",
+              "name": "Virgil van Dijk"
+            },
+            {
+              "id": "mrrwguhmdj0ih",
+              "name": "Gianluigi Donnarumma"
+            },
+            {
+              "id": "mrrwguhm9xups",
+              "name": "Vinicious Jn."
+            },
+            {
+              "id": "mrrwguhmw2sxf",
+              "name": "Achraf Hakimi"
+            },
+            {
+              "id": "mrrwguhmbueou",
+              "name": "Kevin de Bruyne"
+            },
+            {
+              "id": "mrrwguhmro7k6",
+              "name": "Gabriel Magalhaes"
+            },
+            {
+              "id": "mrrwguhm76opy",
+              "name": "Nuno Mendes"
+            },
+            {
+              "id": "mrrwguhmfh0f2",
+              "name": "Pedri"
+            },
+            {
+              "id": "mrrwguhm3nfhl",
+              "name": "Raphinha"
+            },
+            {
+              "id": "mrrwguhm0q8qd",
+              "name": "Julian Alvarez"
+            },
+            {
+              "id": "mrrwguhmit5im",
+              "name": "Mac Alister"
+            },
+            {
+              "id": "mrrwguhmecbii",
+              "name": "Bukayo Saka"
+            },
+            {
+              "id": "mrrwguhmz1k5y",
+              "name": "N'golo Kante"
+            },
+            {
+              "id": "mrrwguhmmnfnx",
+              "name": "Phil Foden"
+            },
+            {
+              "id": "mrrwguhm617z9",
+              "name": "Heung Min Son"
+            }
+          ]
+        },
+        {
+          "id": "mrrwguhmeo9fq",
+          "name": "Tazeem",
+          "teamName": "Paris Saint-Germain",
+          "squad": [
+            {
+              "id": "mrrwguhmifrlo",
+              "name": "Mohamed Salah"
+            },
+            {
+              "id": "mrrwguhmdh2tp",
+              "name": "Jude Bellingham"
+            },
+            {
+              "id": "mrrwguhm77cci",
+              "name": "Rodri"
+            },
+            {
+              "id": "mrrwguhmkbsu0",
+              "name": "Valverde"
+            },
+            {
+              "id": "mrrwguhmeac4z",
+              "name": "William Saliba"
+            },
+            {
+              "id": "mrrwguhmhuybu",
+              "name": "Theo Harnandez"
+            },
+            {
+              "id": "mrrwguhm9ls84",
+              "name": "Jeremi Frimpong"
+            },
+            {
+              "id": "mrrwguhm23o5m",
+              "name": "Ronald Araujo"
+            },
+            {
+              "id": "mrrwguhm9rfwl",
+              "name": "Alisson Becker"
+            },
+            {
+              "id": "mrrwguhm2cdgf",
+              "name": "Alexander Isak"
+            },
+            {
+              "id": "mrrwguhm72yu0",
+              "name": "Florian Wirtz"
+            },
+            {
+              "id": "mrrwguhmonk4n",
+              "name": "Sadio Mane"
+            },
+            {
+              "id": "mrrwguhmi3ou9",
+              "name": "Rafael Leao"
+            },
+            {
+              "id": "mrrwguhmfn4bz",
+              "name": "Victor Osimhen"
+            },
+            {
+              "id": "mrrwguhmrim7k",
+              "name": "Declan Rice"
+            },
+            {
+              "id": "mrrwguhmj7eyb",
+              "name": "Alphonso Davies"
+            }
+          ]
+        }
+      ],
+      "fixtures": [
+        {
+          "id": "mrrwguhrqc5js",
+          "matchday": 1,
+          "homeId": "mrrwguhmozx3z",
+          "awayId": "mrrwguhmeo9fq",
+          "status": "played",
+          "homeScore": 0,
+          "awayScore": 5,
+          "redCards": [],
+          "penaltyWinner": null,
+          "phase": "league"
+        },
+        {
+          "id": "mrrwguhr1ep6u",
+          "matchday": 2,
+          "homeId": "mrrwguhmdoqjm",
+          "awayId": "mrrwguhmeo9fq",
+          "status": "played",
+          "homeScore": 1,
+          "awayScore": 3,
+          "redCards": [],
+          "penaltyWinner": null,
+          "phase": "league"
+        },
+        {
+          "id": "mrrwguhr36xvm",
+          "matchday": 3,
+          "homeId": "mrrwguhmdoqjm",
+          "awayId": "mrrwguhmozx3z",
+          "status": "played",
+          "homeScore": 7,
+          "awayScore": 0,
+          "redCards": [],
+          "penaltyWinner": null,
+          "phase": "league"
+        },
+        {
+          "id": "mrry1ry392k2f",
+          "matchday": null,
+          "homeId": "mrrwguhmeo9fq",
+          "awayId": "mrrwguhmdoqjm",
+          "status": "played",
+          "homeScore": 1,
+          "awayScore": 4,
+          "redCards": [],
+          "penaltyWinner": null,
+          "phase": "final"
+        }
+      ],
+      "suspensions": [],
+      "champion": "mrrwguhmdoqjm",
+      "createdAt": "2026-07-19T14:37:33.663Z"
+    },
+    {
+      "id": "mrrryw4qrrtu3",
+      "name": "Tournament 8",
+      "status": "league",
+      "legs": 2,
+      "players": [
+        {
+          "id": "mrrryw4kbk4oq",
+          "name": "Haider",
+          "teamName": "FC Barcelona",
+          "squad": [
+            {
+              "id": "mrrryw4kf7p3p",
+              "name": "Erling Haaland"
+            },
+            {
+              "id": "mrrryw4kgp23o",
+              "name": "Virgil van Dijk"
+            },
+            {
+              "id": "mrrryw4kkodm2",
+              "name": "Gianluigi Donnarumma"
+            },
+            {
+              "id": "mrrryw4kpmy95",
+              "name": "Vinicious Jn."
+            },
+            {
+              "id": "mrrryw4k5j177",
+              "name": "Achraf Hakimi"
+            },
+            {
+              "id": "mrrryw4kqgirg",
+              "name": "Kevin de Bruyne"
+            },
+            {
+              "id": "mrrryw4k45rs7",
+              "name": "Gabriel Magalhaes"
+            },
+            {
+              "id": "mrrryw4khptff",
+              "name": "Nuno Mendes"
+            },
+            {
+              "id": "mrrryw4kwu60w",
+              "name": "Pedri"
+            },
+            {
+              "id": "mrrryw4k26vyh",
+              "name": "Raphinha"
+            },
+            {
+              "id": "mrrryw4kt04b9",
+              "name": "Julian Alvarez"
+            },
+            {
+              "id": "mrrryw4kd19ry",
+              "name": "Mac Alister"
+            },
+            {
+              "id": "mrrryw4kapnec",
+              "name": "Bukayo Saka"
+            },
+            {
+              "id": "mrrryw4kxoj1r",
+              "name": "N'golo Kante"
+            },
+            {
+              "id": "mrrryw4kcsb5d",
+              "name": "Phil Foden"
+            },
+            {
+              "id": "mrrryw4kaf2dp",
+              "name": "Heung Min Son"
+            }
+          ]
+        },
+        {
+          "id": "mrrryw4kuf9a4",
+          "name": "Tazeem",
+          "teamName": "Paris Saint-Germain",
+          "squad": [
+            {
+              "id": "mrrryw4ksju1w",
+              "name": "Mohamed Salah"
+            },
+            {
+              "id": "mrrryw4ks0r7i",
+              "name": "Jude Bellingham"
+            },
+            {
+              "id": "mrrryw4ko31gh",
+              "name": "Rodri"
+            },
+            {
+              "id": "mrrryw4kvoxou",
+              "name": "Valverde"
+            },
+            {
+              "id": "mrrryw4kva1h8",
+              "name": "William Saliba"
+            },
+            {
+              "id": "mrrryw4kijne0",
+              "name": "Theo Harnandez"
+            },
+            {
+              "id": "mrrryw4k8w609",
+              "name": "Jeremi Frimpong"
+            },
+            {
+              "id": "mrrryw4k9fnwi",
+              "name": "Ronald Araujo"
+            },
+            {
+              "id": "mrrryw4k53hyy",
+              "name": "Alisson Becker"
+            },
+            {
+              "id": "mrrryw4k1mnvn",
+              "name": "Alexander Isak"
+            },
+            {
+              "id": "mrrryw4k83vbs",
+              "name": "Florian Wirtz"
+            },
+            {
+              "id": "mrrryw4kq1rqr",
+              "name": "Sadio Mane"
+            },
+            {
+              "id": "mrrryw4kugzgq",
+              "name": "Rafael Leao"
+            },
+            {
+              "id": "mrrryw4kckroi",
+              "name": "Victor Osimhen"
+            },
+            {
+              "id": "mrrryw4kxockd",
+              "name": "Declan Rice"
+            },
+            {
+              "id": "mrrryw4k3pcqv",
+              "name": "Alphonso Davies"
+            }
+          ]
+        },
+        {
+          "id": "mrrryw4kx96r0",
+          "name": "Mojiz",
+          "teamName": "Manchester City",
+          "squad": [
+            {
+              "id": "mrrryw4k3ap35",
+              "name": "Cristiano Ronaldo"
+            },
+            {
+              "id": "mrrryw4kdqhdm",
+              "name": "Lamine Yamal"
+            },
+            {
+              "id": "mrrryw4kt9re5",
+              "name": "Josko Gvardiol"
+            },
+            {
+              "id": "mrrryw4k1xm2y",
+              "name": "Thibaut Courtois"
+            },
+            {
+              "id": "mrrryw4kgbgo7",
+              "name": "Ousmane Dembele"
+            },
+            {
+              "id": "mrrryw4k7dobm",
+              "name": "Joshua Kimmich"
+            },
+            {
+              "id": "mrrryw4ka7pns",
+              "name": "Aymeric Laporte"
+            },
+            {
+              "id": "mrrryw4kma6jj",
+              "name": "Alejandro Grimaldo"
+            },
+            {
+              "id": "mrrryw4kn3ow0",
+              "name": "Jamal Musiala"
+            },
+            {
+              "id": "mrrryw4k5w9k5",
+              "name": "Dani Carvajal"
+            },
+            {
+              "id": "mrrryw4kasdg4",
+              "name": "Marquinhos"
+            },
+            {
+              "id": "mrrryw4kf8g3v",
+              "name": "Jonathan Tah"
+            },
+            {
+              "id": "mrrryw4ky993k",
+              "name": "Vitinha"
+            },
+            {
+              "id": "mrrryw4khx3tv",
+              "name": "Marcos Llorente"
+            },
+            {
+              "id": "mrrryw4k5qdor",
+              "name": "Serhou Guirassy"
+            },
+            {
+              "id": "mrrryw4k50wbx",
+              "name": "Unai Simon"
+            }
+          ]
+        },
+        {
+          "id": "mrrryw4kgyw09",
+          "name": "Faisal",
+          "teamName": "Real Madrid",
+          "squad": [
+            {
+              "id": "mrrryw4ktypzl",
+              "name": "Kylian Mbappe"
+            },
+            {
+              "id": "mrrryw4kwfylx",
+              "name": "Harry Kane"
+            },
+            {
+              "id": "mrrryw4kzw0qk",
+              "name": "Lionel Messi"
+            },
+            {
+              "id": "mrrryw4kq5isk",
+              "name": "Robert Lewandowski"
+            },
+            {
+              "id": "mrrryw4kuyvm6",
+              "name": "Lautaro Martinez"
+            },
+            {
+              "id": "mrrryw4kppczb",
+              "name": "Antonio Rudiger"
+            },
+            {
+              "id": "mrrryw4kokqmf",
+              "name": "Alessandro Bastoni"
+            },
+            {
+              "id": "mrrryw4keylj8",
+              "name": "Jules Kounde"
+            },
+            {
+              "id": "mrrryw4krico2",
+              "name": "Bruno Fernandez"
+            },
+            {
+              "id": "mrrryw4k3syj4",
+              "name": "Manuel Neuer"
+            },
+            {
+              "id": "mrrryw4kxgtvp",
+              "name": "Martin Odegaard"
+            },
+            {
+              "id": "mrrryw4k6679r",
+              "name": "Aurelien Tchouameni"
+            },
+            {
+              "id": "mrrryw4kb6okc",
+              "name": "Bernardo Silva"
+            },
+            {
+              "id": "mrrryw4kvb9jx",
+              "name": "Nicolo Barella"
+            },
+            {
+              "id": "mrrryw4k3qvm3",
+              "name": "Bremer"
+            },
+            {
+              "id": "mrrryw4kns3bh",
+              "name": "Eduardo Camavinga"
+            }
+          ]
+        }
+      ],
+      "fixtures": [
+        {
+          "id": "mrrryw4qkk2f4",
+          "matchday": 1,
+          "homeId": "mrrryw4kbk4oq",
+          "awayId": "mrrryw4kgyw09",
+          "status": "played",
+          "homeScore": 4,
+          "awayScore": 1,
+          "redCards": [],
+          "penaltyWinner": null,
+          "phase": "league"
+        },
+        {
+          "id": "mrrryw4q0nkp5",
+          "matchday": 1,
+          "homeId": "mrrryw4kuf9a4",
+          "awayId": "mrrryw4kx96r0",
+          "status": "played",
+          "homeScore": 1,
+          "awayScore": 1,
+          "redCards": [],
+          "penaltyWinner": null,
+          "phase": "league"
+        },
+        {
+          "id": "mrrryw4qp723z",
+          "matchday": 2,
+          "homeId": "mrrryw4kbk4oq",
+          "awayId": "mrrryw4kx96r0",
+          "status": "played",
+          "homeScore": 1,
+          "awayScore": 2,
+          "redCards": [
+            {
+              "playerId": "mrrryw4k45rs7",
+              "playerName": "Gabriel Magalhaes",
+              "teamId": "mrrryw4kbk4oq"
+            }
+          ],
+          "penaltyWinner": null,
+          "phase": "league"
+        },
+        {
+          "id": "mrrryw4q6seag",
+          "matchday": 2,
+          "homeId": "mrrryw4kgyw09",
+          "awayId": "mrrryw4kuf9a4",
+          "status": "played",
+          "homeScore": 1,
+          "awayScore": 6,
+          "redCards": [],
+          "penaltyWinner": null,
+          "phase": "league"
+        },
+        {
+          "id": "mrrryw4q0ylug",
+          "matchday": 3,
+          "homeId": "mrrryw4kbk4oq",
+          "awayId": "mrrryw4kuf9a4",
+          "status": "played",
+          "homeScore": 6,
+          "awayScore": 0,
+          "redCards": [],
+          "penaltyWinner": null,
+          "phase": "league"
+        },
+        {
+          "id": "mrrryw4qxu2fk",
+          "matchday": 3,
+          "homeId": "mrrryw4kx96r0",
+          "awayId": "mrrryw4kgyw09",
+          "status": "played",
+          "homeScore": 5,
+          "awayScore": 2,
+          "redCards": [],
+          "penaltyWinner": null,
+          "phase": "league"
+        },
+        {
+          "id": "mrrryw4qr23s7",
+          "matchday": 4,
+          "homeId": "mrrryw4kgyw09",
+          "awayId": "mrrryw4kbk4oq",
+          "status": "pending",
+          "homeScore": null,
+          "awayScore": null,
+          "redCards": [],
+          "penaltyWinner": null,
+          "phase": "league"
+        },
+        {
+          "id": "mrrryw4qvpgyo",
+          "matchday": 4,
+          "homeId": "mrrryw4kx96r0",
+          "awayId": "mrrryw4kuf9a4",
+          "status": "pending",
+          "homeScore": null,
+          "awayScore": null,
+          "redCards": [],
+          "penaltyWinner": null,
+          "phase": "league"
+        },
+        {
+          "id": "mrrryw4qivwl9",
+          "matchday": 5,
+          "homeId": "mrrryw4kx96r0",
+          "awayId": "mrrryw4kbk4oq",
+          "status": "pending",
+          "homeScore": null,
+          "awayScore": null,
+          "redCards": [],
+          "penaltyWinner": null,
+          "phase": "league"
+        },
+        {
+          "id": "mrrryw4qeqnae",
+          "matchday": 5,
+          "homeId": "mrrryw4kuf9a4",
+          "awayId": "mrrryw4kgyw09",
+          "status": "pending",
+          "homeScore": null,
+          "awayScore": null,
+          "redCards": [],
+          "penaltyWinner": null,
+          "phase": "league"
+        },
+        {
+          "id": "mrrryw4qklh8i",
+          "matchday": 6,
+          "homeId": "mrrryw4kuf9a4",
+          "awayId": "mrrryw4kbk4oq",
+          "status": "pending",
+          "homeScore": null,
+          "awayScore": null,
+          "redCards": [],
+          "penaltyWinner": null,
+          "phase": "league"
+        },
+        {
+          "id": "mrrryw4qeilnf",
+          "matchday": 6,
+          "homeId": "mrrryw4kgyw09",
+          "awayId": "mrrryw4kx96r0",
+          "status": "pending",
+          "homeScore": null,
+          "awayScore": null,
+          "redCards": [],
+          "penaltyWinner": null,
+          "phase": "league"
+        }
+      ],
+      "suspensions": [
+        {
+          "id": "mrrty26j6gc33",
+          "playerId": "mrrryw4k45rs7",
+          "playerName": "Gabriel Magalhaes",
+          "teamId": "mrrryw4kbk4oq",
+          "givenInFixtureId": "mrrryw4qp723z",
+          "servesInFixtureId": "mrrryw4q0ylug",
+          "served": true
+        }
+      ],
+      "champion": null,
+      "createdAt": "2026-07-19T12:31:37.514Z"
+    },
+    {
+      "id": "mrqhbu8an41qz",
+      "name": "Tournament 7",
+      "status": "complete",
+      "legs": 2,
+      "players": [
+        {
+          "id": "mrqhbu7xg5kh7",
+          "name": "Mojiz",
+          "teamName": "Manchester City",
+          "squad": [
+            {
+              "id": "mrqhbu7yt4k6y",
+              "name": "Cristiano Ronaldo"
+            },
+            {
+              "id": "mrqhbu7y9o4so",
+              "name": "Lamine Yamal"
+            },
+            {
+              "id": "mrqhbu7ys8h1l",
+              "name": "Josko Gvardiol"
+            },
+            {
+              "id": "mrqhbu7ygn8xm",
+              "name": "Thibaut Courtois"
+            },
+            {
+              "id": "mrqhbu7yo93l7",
+              "name": "Ousmane Dembele"
+            },
+            {
+              "id": "mrqhbu7ypn6dw",
+              "name": "Joshua Kimmich"
+            },
+            {
+              "id": "mrqhbu7yn37sw",
+              "name": "Aymeric Laporte"
+            },
+            {
+              "id": "mrqhbu7z855d0",
+              "name": "Alejandro Grimaldo"
+            },
+            {
+              "id": "mrqhbu7z3qt53",
+              "name": "Jamal Musiala"
+            },
+            {
+              "id": "mrqhbu7zatu8f",
+              "name": "Dani Carvajal"
+            },
+            {
+              "id": "mrqhbu7zfzr2q",
+              "name": "Marquinhos"
+            },
+            {
+              "id": "mrqhbu7z24qj8",
+              "name": "Jonathan Tah"
+            },
+            {
+              "id": "mrqhbu7zbuksp",
+              "name": "Vitinha"
+            },
+            {
+              "id": "mrqhbu7znx8yi",
+              "name": "Marcos Llorente"
+            },
+            {
+              "id": "mrqhbu7z7sdrn",
+              "name": "Serhou Guirassy"
+            },
+            {
+              "id": "mrqhbu7ziwnal",
+              "name": "Unai Simon"
+            }
+          ]
+        },
+        {
+          "id": "mrqhbu806d7pa",
+          "name": "Faisal",
+          "teamName": "Real Madrid",
+          "squad": [
+            {
+              "id": "mrqhbu80sloeo",
+              "name": "Kylian Mbappe"
+            },
+            {
+              "id": "mrqhbu80h43xk",
+              "name": "Harry Kane"
+            },
+            {
+              "id": "mrqhbu80qt8dl",
+              "name": "Lionel Messi"
+            },
+            {
+              "id": "mrqhbu80xbwgi",
+              "name": "Robert Lewandowski"
+            },
+            {
+              "id": "mrqhbu8009i0e",
+              "name": "Lautaro Martinez"
+            },
+            {
+              "id": "mrqhbu807veyo",
+              "name": "Antonio Rudiger"
+            },
+            {
+              "id": "mrqhbu80qwy73",
+              "name": "Alessandro Bastoni"
+            },
+            {
+              "id": "mrqhbu80jj8gf",
+              "name": "Jules Kounde"
+            },
+            {
+              "id": "mrqhbu801b8m1",
+              "name": "Bruno Fernandez"
+            },
+            {
+              "id": "mrqhbu805mzl9",
+              "name": "Manuel Neuer"
+            },
+            {
+              "id": "mrqhbu8065q2x",
+              "name": "Martin Odegaard"
+            },
+            {
+              "id": "mrqhbu80936e0",
+              "name": "Aurelien Tchouameni"
+            },
+            {
+              "id": "mrqhbu80duhl8",
+              "name": "Bernardo Silva"
+            },
+            {
+              "id": "mrqhbu80hfv8j",
+              "name": "Nicolo Barella"
+            },
+            {
+              "id": "mrqhbu8021tdr",
+              "name": "Bremer"
+            },
+            {
+              "id": "mrqhbu80h263c",
+              "name": "Eduardo Camavinga"
+            }
+          ]
+        },
+        {
+          "id": "mrqhbu804l6kq",
+          "name": "Haider",
+          "teamName": "FC Barcelona",
+          "squad": [
+            {
+              "id": "mrqhbu80h29ka",
+              "name": "Erling Haaland"
+            },
+            {
+              "id": "mrqhbu8015o9m",
+              "name": "Virgil van Dijk"
+            },
+            {
+              "id": "mrqhbu80jwttn",
+              "name": "Gianluigi Donnarumma"
+            },
+            {
+              "id": "mrqhbu80zcdgs",
+              "name": "Vinicious Jn."
+            },
+            {
+              "id": "mrqhbu808fzbe",
+              "name": "Achraf Hakimi"
+            },
+            {
+              "id": "mrqhbu806rtwl",
+              "name": "Kevin de Bruyne"
+            },
+            {
+              "id": "mrqhbu80owra7",
+              "name": "Gabriel Magalhaes"
+            },
+            {
+              "id": "mrqhbu80ijl1u",
+              "name": "Nuno Mendes"
+            },
+            {
+              "id": "mrqhbu80w4prt",
+              "name": "Pedri"
+            },
+            {
+              "id": "mrqhbu80k9h46",
+              "name": "Raphinha"
+            },
+            {
+              "id": "mrqhbu80l8xu3",
+              "name": "Julian Alvarez"
+            },
+            {
+              "id": "mrqhbu80q0mxz",
+              "name": "Mac Alister"
+            },
+            {
+              "id": "mrqhbu80x4c8x",
+              "name": "Bukayo Saka"
+            },
+            {
+              "id": "mrqhbu800umtq",
+              "name": "N'golo Kante"
+            },
+            {
+              "id": "mrqhbu80wwruq",
+              "name": "Phil Foden"
+            },
+            {
+              "id": "mrqhbu80qs2wi",
+              "name": "Heung Min Son"
+            }
+          ]
+        },
+        {
+          "id": "mrqhbu80qzdkl",
+          "name": "Tazeem",
+          "teamName": "Paris Saint-Germain",
+          "squad": [
+            {
+              "id": "mrqhbu80i7725",
+              "name": "Mohamed Salah"
+            },
+            {
+              "id": "mrqhbu806q1te",
+              "name": "Jude Bellingham"
+            },
+            {
+              "id": "mrqhbu8048eb4",
+              "name": "Rodri"
+            },
+            {
+              "id": "mrqhbu80wrikx",
+              "name": "Valverde"
+            },
+            {
+              "id": "mrqhbu80l5neo",
+              "name": "William Saliba"
+            },
+            {
+              "id": "mrqhbu8020uwd",
+              "name": "Theo Harnandez"
+            },
+            {
+              "id": "mrqhbu80pf66j",
+              "name": "Jeremi Frimpong"
+            },
+            {
+              "id": "mrqhbu803635i",
+              "name": "Ronald Araujo"
+            },
+            {
+              "id": "mrqhbu80fhvir",
+              "name": "Alisson Becker"
+            },
+            {
+              "id": "mrqhbu80l1r9i",
+              "name": "Alexander Isak"
+            },
+            {
+              "id": "mrqhbu80n6ou1",
+              "name": "Florian Wirtz"
+            },
+            {
+              "id": "mrqhbu80gauhr",
+              "name": "Sadio Mane"
+            },
+            {
+              "id": "mrqhbu8049b33",
+              "name": "Rafael Leao"
+            },
+            {
+              "id": "mrqhbu80gqcjp",
+              "name": "Victor Osimhen"
+            },
+            {
+              "id": "mrqhbu80arcav",
+              "name": "Declan Rice"
+            },
+            {
+              "id": "mrqhbu80sdql9",
+              "name": "Alphonso Davies"
+            }
+          ]
+        }
+      ],
+      "fixtures": [
+        {
+          "id": "mrqhbu8bpt2r9",
+          "matchday": 1,
+          "homeId": "mrqhbu7xg5kh7",
+          "awayId": "mrqhbu80qzdkl",
+          "status": "played",
+          "homeScore": 1,
+          "awayScore": 3,
+          "redCards": [],
+          "penaltyWinner": null,
+          "phase": "league"
+        },
+        {
+          "id": "mrqhbu8bwp0ox",
+          "matchday": 1,
+          "homeId": "mrqhbu806d7pa",
+          "awayId": "mrqhbu804l6kq",
+          "status": "played",
+          "homeScore": 0,
+          "awayScore": 1,
+          "redCards": [],
+          "penaltyWinner": null,
+          "phase": "league"
+        },
+        {
+          "id": "mrqhbu8b7c71z",
+          "matchday": 2,
+          "homeId": "mrqhbu7xg5kh7",
+          "awayId": "mrqhbu804l6kq",
+          "status": "played",
+          "homeScore": 1,
+          "awayScore": 5,
+          "redCards": [],
+          "penaltyWinner": null,
+          "phase": "league"
+        },
+        {
+          "id": "mrqhbu8bypjai",
+          "matchday": 2,
+          "homeId": "mrqhbu80qzdkl",
+          "awayId": "mrqhbu806d7pa",
+          "status": "played",
+          "homeScore": 3,
+          "awayScore": 1,
+          "redCards": [],
+          "penaltyWinner": null,
+          "phase": "league"
+        },
+        {
+          "id": "mrqhbu8bsd51g",
+          "matchday": 3,
+          "homeId": "mrqhbu7xg5kh7",
+          "awayId": "mrqhbu806d7pa",
+          "status": "played",
+          "homeScore": 2,
+          "awayScore": 0,
+          "redCards": [],
+          "penaltyWinner": null,
+          "phase": "league"
+        },
+        {
+          "id": "mrqhbu8bv0zmw",
+          "matchday": 3,
+          "homeId": "mrqhbu804l6kq",
+          "awayId": "mrqhbu80qzdkl",
+          "status": "played",
+          "homeScore": 3,
+          "awayScore": 4,
+          "redCards": [],
+          "penaltyWinner": null,
+          "phase": "league"
+        },
+        {
+          "id": "mrqhbu8bncz2v",
+          "matchday": 4,
+          "homeId": "mrqhbu80qzdkl",
+          "awayId": "mrqhbu7xg5kh7",
+          "status": "played",
+          "homeScore": 1,
+          "awayScore": 0,
+          "redCards": [],
+          "penaltyWinner": null,
+          "phase": "league"
+        },
+        {
+          "id": "mrqhbu8bl7xin",
+          "matchday": 4,
+          "homeId": "mrqhbu804l6kq",
+          "awayId": "mrqhbu806d7pa",
+          "status": "played",
+          "homeScore": 1,
+          "awayScore": 4,
+          "redCards": [],
+          "penaltyWinner": null,
+          "phase": "league"
+        },
+        {
+          "id": "mrqhbu8byalhv",
+          "matchday": 5,
+          "homeId": "mrqhbu804l6kq",
+          "awayId": "mrqhbu7xg5kh7",
+          "status": "played",
+          "homeScore": 3,
+          "awayScore": 3,
+          "redCards": [],
+          "penaltyWinner": null,
+          "phase": "league"
+        },
+        {
+          "id": "mrqhbu8bbev9a",
+          "matchday": 5,
+          "homeId": "mrqhbu806d7pa",
+          "awayId": "mrqhbu80qzdkl",
+          "status": "played",
+          "homeScore": 2,
+          "awayScore": 4,
+          "redCards": [],
+          "penaltyWinner": null,
+          "phase": "league"
+        },
+        {
+          "id": "mrqhbu8bilqzo",
+          "matchday": 6,
+          "homeId": "mrqhbu806d7pa",
+          "awayId": "mrqhbu7xg5kh7",
+          "status": "played",
+          "homeScore": 0,
+          "awayScore": 1,
+          "redCards": [],
+          "penaltyWinner": null,
+          "phase": "league"
+        },
+        {
+          "id": "mrqhbu8bqm5j3",
+          "matchday": 6,
+          "homeId": "mrqhbu80qzdkl",
+          "awayId": "mrqhbu804l6kq",
+          "status": "played",
+          "homeScore": 3,
+          "awayScore": 1,
+          "redCards": [],
+          "penaltyWinner": null,
+          "phase": "league"
+        },
+        {
+          "id": "mrqq776nw7gq1",
+          "matchday": null,
+          "homeId": "mrqhbu80qzdkl",
+          "awayId": "mrqhbu804l6kq",
+          "status": "played",
+          "homeScore": 2,
+          "awayScore": 1,
+          "redCards": [],
+          "penaltyWinner": null,
+          "phase": "final"
+        }
+      ],
+      "suspensions": [],
+      "champion": "mrqhbu80qzdkl",
+      "createdAt": "2026-07-18T14:45:59.627Z"
+    },
+    {
+      "id": "mros5yc1grwb5",
+      "name": "Tournament 6",
+      "status": "complete",
+      "isManual": true,
+      "createdAt": "2026-07-17T00:00:00.000Z",
+      "champion": "mros5h7esv97v",
+      "players": [
+        {
+          "id": "mros5h7esv97v",
+          "name": "Mojiz",
+          "teamName": "Manchester City",
+          "squad": []
+        },
+        {
+          "id": "mros5jl865z6f",
+          "name": "Faisal",
+          "teamName": "Real Madrid",
+          "squad": []
+        },
+        {
+          "id": "mros5mbif881a",
+          "name": "Haider",
+          "teamName": "FC Barcelona",
+          "squad": []
+        },
+        {
+          "id": "mros5oxqigowx",
+          "name": "Tazeem",
+          "teamName": "Paris Saint-Germain",
+          "squad": []
+        }
+      ],
+      "final": {
+        "homeId": "mros5h7esv97v",
+        "awayId": "mros5oxqigowx",
+        "homeScore": 4,
+        "awayScore": 2,
+        "penaltyWinner": null
+      },
+      "fixtures": [],
+      "suspensions": []
+    },
+    {
+      "id": "mros4oback9s9",
+      "name": "Tournament 5",
+      "status": "complete",
+      "isManual": true,
+      "createdAt": "2026-07-14T00:00:00.000Z",
+      "champion": "mros4ayqm21dl",
+      "players": [
+        {
+          "id": "mros46m7vogdz",
+          "name": "Mojiz",
+          "teamName": "Manchester City",
+          "squad": []
+        },
+        {
+          "id": "mros48seqrcng",
+          "name": "Faisal",
+          "teamName": "Real Madrid",
+          "squad": []
+        },
+        {
+          "id": "mros4ayqm21dl",
+          "name": "Haider",
+          "teamName": "FC Barcelona",
+          "squad": []
+        },
+        {
+          "id": "mros4ddte6sam",
+          "name": "Tazeem",
+          "teamName": "Paris Saint-Germain",
+          "squad": []
+        }
+      ],
+      "final": {
+        "homeId": "mros4ayqm21dl",
+        "awayId": "mros4ddte6sam",
+        "homeScore": 5,
+        "awayScore": 4,
+        "penaltyWinner": null
+      },
+      "fixtures": [],
+      "suspensions": []
+    },
+    {
+      "id": "mros1yddjtrfw",
+      "name": "Tournament 4",
+      "status": "complete",
+      "isManual": true,
+      "createdAt": "2026-07-10T00:00:00.000Z",
+      "champion": "mros17cayvxgk",
+      "players": [
+        {
+          "id": "mros10bjwzwpq",
+          "name": "Mojiz",
+          "teamName": "Manchester City",
+          "squad": []
+        },
+        {
+          "id": "mros12g0fwlj7",
+          "name": "Faisal",
+          "teamName": "Real Madrid",
+          "squad": []
+        },
+        {
+          "id": "mros14xp7c69w",
+          "name": "Haider",
+          "teamName": "FC Barcelona",
+          "squad": []
+        },
+        {
+          "id": "mros17cayvxgk",
+          "name": "Tazeem",
+          "teamName": "Paris Saint-Germain",
+          "squad": []
+        }
+      ],
+      "final": {
+        "homeId": "mros14xp7c69w",
+        "awayId": "mros17cayvxgk",
+        "homeScore": 2,
+        "awayScore": 3,
+        "penaltyWinner": null
+      },
+      "fixtures": [],
+      "suspensions": []
+    },
+    {
+      "id": "mrory16rwiybw",
+      "name": "Tournament 3",
+      "status": "complete",
+      "isManual": true,
+      "createdAt": "2026-07-09T00:00:00.000Z",
+      "champion": "mrorxhmft5ol4",
+      "players": [
+        {
+          "id": "mrorxamj4g6z7",
+          "name": "Mojiz",
+          "teamName": "Manchester City",
+          "squad": []
+        },
+        {
+          "id": "mrorxd18r2kwv",
+          "name": "Faisal",
+          "teamName": "Real Madrid",
+          "squad": []
+        },
+        {
+          "id": "mrorxf9uv6i57",
+          "name": "Haider",
+          "teamName": "FC Barcelona",
+          "squad": []
+        },
+        {
+          "id": "mrorxhmft5ol4",
+          "name": "Tazeem",
+          "teamName": "Paris Saint-Germain",
+          "squad": []
+        }
+      ],
+      "final": {
+        "homeId": "mrorxhmft5ol4",
+        "awayId": "mrorxf9uv6i57",
+        "homeScore": 5,
+        "awayScore": 5,
+        "penaltyWinner": "mrorxhmft5ol4"
+      },
+      "fixtures": [],
+      "suspensions": []
+    },
+    {
+      "id": "mrorw5ys3oa5m",
+      "name": "Tournament 2",
+      "status": "complete",
+      "isManual": true,
+      "createdAt": "2026-07-06T00:00:00.000Z",
+      "champion": "mrorvbi9ctlgi",
+      "players": [
+        {
+          "id": "mrorv3alm91ta",
+          "name": "Mojiz",
+          "teamName": "Manchester City",
+          "squad": []
+        },
+        {
+          "id": "mrorv6ar9990l",
+          "name": "Faisal",
+          "teamName": "Real Madrid",
+          "squad": []
+        },
+        {
+          "id": "mrorv8x3aghlr",
+          "name": "Haider",
+          "teamName": "FC Barcelona",
+          "squad": []
+        },
+        {
+          "id": "mrorvbi9ctlgi",
+          "name": "Tazeem",
+          "teamName": "Paris Saint-Germain",
+          "squad": []
+        }
+      ],
+      "final": {
+        "homeId": "mrorvbi9ctlgi",
+        "awayId": "mrorv6ar9990l",
+        "homeScore": 10,
+        "awayScore": 2,
+        "penaltyWinner": null
+      },
+      "fixtures": [],
+      "suspensions": []
+    },
+    {
+      "id": "mrortody479xf",
+      "name": "Tournament 1",
+      "status": "complete",
+      "isManual": true,
+      "createdAt": "2026-07-05T00:00:00.000Z",
+      "champion": "mrort88w0etnu",
+      "players": [
+        {
+          "id": "mrorszw1m5bnt",
+          "name": "Mojiz",
+          "teamName": "Manchester City",
+          "squad": []
+        },
+        {
+          "id": "mrort2yotln4o",
+          "name": "Faisal",
+          "teamName": "Real Madrid",
+          "squad": []
+        },
+        {
+          "id": "mrort5ohw7u0y",
+          "name": "Haider",
+          "teamName": "FC Barcelona",
+          "squad": []
+        },
+        {
+          "id": "mrort88w0etnu",
+          "name": "Tazeem",
+          "teamName": "Paris Saint-Germain",
+          "squad": []
+        }
+      ],
+      "final": {
+        "homeId": "mrorszw1m5bnt",
+        "awayId": "mrort88w0etnu",
+        "homeScore": 4,
+        "awayScore": 6,
+        "penaltyWinner": null
+      },
+      "fixtures": [],
+      "suspensions": []
+    }
+  ],
+  "profiles": [
+    {
+      "id": "mroreshjpow72",
+      "managerName": "Mojiz",
+      "preferredClub": "Manchester City",
+      "squad": [
+        "Cristiano Ronaldo",
+        "Lamine Yamal",
+        "Josko Gvardiol",
+        "Thibaut Courtois",
+        "Ousmane Dembele",
+        "Joshua Kimmich",
+        "Aymeric Laporte",
+        "Alejandro Grimaldo",
+        "Jamal Musiala",
+        "Dani Carvajal",
+        "Marquinhos",
+        "Jonathan Tah",
+        "Vitinha",
+        "Marcos Llorente",
+        "Serhou Guirassy",
+        "Unai Simon"
+      ],
+      "lastUpdated": "2026-07-19T14:37:33.659Z"
+    },
+    {
+      "id": "mrorj1pedipbs",
+      "managerName": "Faisal",
+      "preferredClub": "Real Madrid",
+      "squad": [
+        "Kylian Mbappe",
+        "Harry Kane",
+        "Lionel Messi",
+        "Robert Lewandowski",
+        "Lautaro Martinez",
+        "Antonio Rudiger",
+        "Alessandro Bastoni",
+        "Jules Kounde",
+        "Bruno Fernandez",
+        "Manuel Neuer",
+        "Martin Odegaard",
+        "Aurelien Tchouameni",
+        "Bernardo Silva",
+        "Nicolo Barella",
+        "Bremer",
+        "Eduardo Camavinga"
+      ],
+      "lastUpdated": "2026-07-19T12:31:37.514Z"
+    },
+    {
+      "id": "mrorn0nvbs7ji",
+      "managerName": "Haider",
+      "preferredClub": "FC Barcelona",
+      "squad": [
+        "Erling Haaland",
+        "Virgil van Dijk",
+        "Gianluigi Donnarumma",
+        "Vinicious Jn.",
+        "Achraf Hakimi",
+        "Kevin de Bruyne",
+        "Gabriel Magalhaes",
+        "Nuno Mendes",
+        "Pedri",
+        "Raphinha",
+        "Julian Alvarez",
+        "Mac Alister",
+        "Bukayo Saka",
+        "N'golo Kante",
+        "Phil Foden",
+        "Heung Min Son"
+      ],
+      "lastUpdated": "2026-07-19T14:37:33.661Z"
+    },
+    {
+      "id": "mrorrh1223wkp",
+      "managerName": "Tazeem",
+      "preferredClub": "Paris Saint-Germain",
+      "squad": [
+        "Mohamed Salah",
+        "Jude Bellingham",
+        "Rodri",
+        "Valverde",
+        "William Saliba",
+        "Theo Harnandez",
+        "Jeremi Frimpong",
+        "Ronald Araujo",
+        "Alisson Becker",
+        "Alexander Isak",
+        "Florian Wirtz",
+        "Sadio Mane",
+        "Rafael Leao",
+        "Victor Osimhen",
+        "Declan Rice",
+        "Alphonso Davies"
+      ],
+      "lastUpdated": "2026-07-19T14:37:33.661Z"
+    }
+  ]
+}

@@ -12,12 +12,12 @@ import HistoryDetailsPage from './pages/HistoryDetailsPage.jsx';
 function AppContent() {
   useLiveData(); // start all Firestore listeners
 
-  const { tournament, showProfiles, showStats, viewHistoryId } = useStore();
+  const { activeView } = useStore();
 
-  if (showProfiles)  return <ProfilesPage />;
-  if (showStats)     return <StatsPage />;
-  if (viewHistoryId) return <HistoryDetailsPage />;
-  if (tournament)    return <MainPage />;
+  if (activeView === 'profiles')       return <ProfilesPage />;
+  if (activeView === 'stats')          return <StatsPage />;
+  if (activeView === 'historyDetails') return <HistoryDetailsPage />;
+  if (activeView === 'tournament')     return <MainPage />;
   return <SetupPage />;
 }
 

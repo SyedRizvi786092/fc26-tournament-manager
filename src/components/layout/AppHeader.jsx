@@ -1,15 +1,30 @@
 import useStore from '../../store/useStore.js';
 import { useAuth } from '../../contexts/AuthContext.jsx';
 import { useToast } from '../../contexts/ToastContext.jsx';
-import { addToHistory, clearActiveTournament } from '../../services/firestoreService.js';
+import { addToHistory, clearActiveTournament, updateAdminPresence } from '../../services/firestoreService.js';
 import LiveIndicator from '../ui/LiveIndicator.jsx';
+import { useEffect } from 'react';
 
 export default function AppHeader() {
-  const { tournament, view, setView, goToProfiles, goToStats, openModal } = useStore();
+  const { tournament, view, setView, goToProfiles, goToStats, goToHub, openModal } = useStore();
   const { isAdmin } = useAuth();
   const toast = useToast();
 
   if (!tournament) return null;
+
+  // Track Admin presence: Live when inside tournament
+  useEffect(() => {
+    if (isAdmin && tournament) {
+      updateAdminPresence(tournament.id, true);
+    }
+  }, [isAdmin, tournament]);
+
+  const handleBackToHub = async () => {
+    if (isAdmin && tournament) {
+      await updateAdminPresence(tournament.id, false); // Switch presence to paused
+    }
+    goToHub();
+  };
 
   const t = tournament;
   const lTotal  = t.fixtures.filter(f => f.phase === 'league').length;
@@ -30,15 +45,17 @@ export default function AppHeader() {
   const handleNew = () => {
     openModal({
       type: 'confirm',
-      title: '🔄 New Tournament',
+      title: '🔄 Archive Tournament',
       msg: t.status === 'complete'
         ? 'Archive this completed tournament and start fresh? You can view its results anytime in history.'
-        : 'Leave this tournament in progress and start fresh? It will be saved as "In Progress" in history.',
+        : 'Archive this tournament to history? It will be saved as "In Progress" in history, and you can resume it later.',
       onConfirm: async () => {
         try {
+          if (isAdmin) await updateAdminPresence(null, false);
           await addToHistory({ ...t });
           await clearActiveTournament();
           toast('Tournament archived to history ✓', 'ok');
+          goToHub();
         } catch (err) {
           console.error(err);
           toast('Failed to archive tournament', 'err');
@@ -51,6 +68,9 @@ export default function AppHeader() {
     <header className="app-header">
       <div className="header-top">
         <div className="header-brand">
+          <button className="btn btn-sm btn-secondary" onClick={handleBackToHub} style={{ marginRight: 6 }}>
+            ← Home
+          </button>
           <div className="header-logo">⚽</div>
           <div>
             <div className="header-name">{t.name}</div>
@@ -62,7 +82,7 @@ export default function AppHeader() {
           <button className="btn btn-sm btn-secondary" onClick={goToStats}>📊 Stats</button>
           <button className="btn btn-sm btn-secondary" onClick={goToProfiles}>⚙️ Teams</button>
           {isAdmin && (
-            <button className="btn btn-sm btn-danger" onClick={handleNew}>🔄 New</button>
+            <button className="btn btn-sm btn-danger" onClick={handleNew}> Archive</button>
           )}
         </div>
       </div>

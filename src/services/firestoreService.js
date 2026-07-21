@@ -4,12 +4,26 @@ import {
 } from 'firebase/firestore';
 import { db } from '../firebase.js';
 
-// ─── Config ────────────────────────────────────────────────────────────────
+// ─── Config & Admin Presence ──────────────────────────────────────────────
 
 export const getSettings = () => getDoc(doc(db, 'config', 'settings'));
 
 export const saveSettings = (data) =>
   setDoc(doc(db, 'config', 'settings'), data, { merge: true });
+
+export const subscribeToSettings = (callback) =>
+  onSnapshot(doc(db, 'config', 'settings'), snapshot => {
+    callback(snapshot.exists() ? snapshot.data() : null);
+  });
+
+export const updateAdminPresence = (activeTournamentId, isEditing) =>
+  setDoc(doc(db, 'config', 'settings'), {
+    adminPresence: {
+      activeTournamentId: activeTournamentId || null,
+      isEditing: !!isEditing,
+      updatedAt: new Date().toISOString(),
+    }
+  }, { merge: true });
 
 // ─── Active Tournament ───────────────────────────────────────────────────
 

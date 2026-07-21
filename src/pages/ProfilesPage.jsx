@@ -9,7 +9,7 @@ import EmptyState from '../components/ui/EmptyState.jsx';
 import { useState } from 'react';
 
 export default function ProfilesPage() {
-  const { profiles, backFromProfiles, modal, openModal, closeModal } = useStore();
+  const { profiles, goToHub, modal, openModal, closeModal } = useStore();
   const { isAdmin, signOut, currentUser } = useAuth();
   const toast = useToast();
   const [editModal, setEditModal] = useState(null);
@@ -52,7 +52,7 @@ export default function ProfilesPage() {
   return (
     <div className="profiles-page">
       <div className="profiles-hdr">
-        <button className="btn btn-sm btn-secondary" onClick={backFromProfiles}>← Back</button>
+        <button className="btn btn-sm btn-secondary" onClick={goToHub}>← Home</button>
         <span className="profiles-hdr-title">Teams &amp; Settings</span>
         <button className="btn btn-sm btn-danger" onClick={signOut} style={{ marginLeft: 'auto' }}>
           Sign Out
@@ -78,7 +78,7 @@ export default function ProfilesPage() {
             <div className="file-setting">
               <div className="fsr-info">
                 <div className="fsr-label">Import JSON Data to Firestore</div>
-                <div className="fsr-sub">Select fc26-tournament-data.json to seed active tournament, history &amp; profiles into the cloud</div>
+                <div className="fsr-sub">Select fc26-tournament-data-all.json to seed tournaments &amp; team rosters</div>
               </div>
               <div className="fsr-actions">
                 <label className="btn btn-sm btn-primary" style={{ cursor: 'pointer' }}>
@@ -107,32 +107,51 @@ export default function ProfilesPage() {
             )}
           </div>
           {profiles.length ? profiles.map(p => (
-            <div key={p.id} className="profile-card">
+            <div
+              key={p.id}
+              className="profile-card"
+              style={{ cursor: 'pointer' }}
+              onClick={() => setEditModal({ type: 'editProfile', profileId: p.id, managerName: p.managerName, preferredClub: p.preferredClub, squad: [...(p.squad || [])] })}
+            >
               <div className="profile-avatar">⚽</div>
               <div className="profile-info">
                 <div className="profile-name">{p.managerName}</div>
                 <div className="profile-club">{p.preferredClub}</div>
-                <div className="profile-meta">{p.squad.length} squad players · Updated {new Date(p.lastUpdated).toLocaleDateString()}</div>
-              </div>
-              {isAdmin && (
-                <div className="profile-actions">
-                  <button className="btn btn-sm btn-secondary"
-                    onClick={() => setEditModal({ type: 'editProfile', profileId: p.id, managerName: p.managerName, preferredClub: p.preferredClub, squad: [...p.squad] })}>
-                    ✏️ Edit
-                  </button>
-                  <button className="btn btn-sm btn-danger btn-icon" onClick={() => handleDeleteProfile(p.id)} title="Delete team">🗑️</button>
+                <div className="profile-meta">
+                  {(p.squad || []).length} squad players &ensp;·&ensp; <span style={{ color: 'var(--green)', fontWeight: 600 }}>📋 Tap to view squad</span>
                 </div>
-              )}
+              </div>
+              <div className="profile-actions" onClick={e => e.stopPropagation()}>
+                {isAdmin ? (
+                  <>
+                    <button className="btn btn-sm btn-secondary"
+                      onClick={() => setEditModal({ type: 'editProfile', profileId: p.id, managerName: p.managerName, preferredClub: p.preferredClub, squad: [...(p.squad || [])] })}>
+                      ✏️ Edit
+                    </button>
+                    <button className="btn btn-sm btn-danger btn-icon" onClick={() => handleDeleteProfile(p.id)} title="Delete team">🗑️</button>
+                  </>
+                ) : (
+                  <button className="btn btn-sm btn-secondary"
+                    onClick={() => setEditModal({ type: 'editProfile', profileId: p.id, managerName: p.managerName, preferredClub: p.preferredClub, squad: [...(p.squad || [])] })}>
+                    📋 Squad
+                  </button>
+                )}
+              </div>
             </div>
           )) : (
             <EmptyState icon="👤" title="No Teams Saved Yet"
-              message="Team profiles are saved automatically when you create a tournament, or add them manually with the button above." />
+              message="Team profiles are saved automatically when a tournament is created, or added manually above." />
           )}
         </div>
       </div>
 
       {editModal && (
-        <EditProfileModal modal={editModal} onClose={() => setEditModal(null)} onSave={handleSaveProfile} />
+        <EditProfileModal
+          modal={editModal}
+          readOnly={!isAdmin}
+          onClose={() => setEditModal(null)}
+          onSave={handleSaveProfile}
+        />
       )}
       {modal?.type === 'confirm' && <ConfirmModal modal={modal} onClose={closeModal} />}
     </div>

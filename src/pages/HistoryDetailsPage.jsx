@@ -63,7 +63,7 @@ function ManualHistoryDetails({ t, onBack }) {
   return (
     <div className="profiles-page">
       <div className="profiles-hdr">
-        <button className="btn btn-sm btn-secondary" onClick={onBack}>← Back</button>
+        <button className="btn btn-sm btn-secondary" onClick={onBack}>← Home</button>
         <span className="profiles-hdr-title">{t.name} (Retro)</span>
         <span style={{ fontSize: 12, color: 'var(--t2)', marginRight: 12 }}>{formattedDate}</span>
       </div>
@@ -93,7 +93,7 @@ function ManualHistoryDetails({ t, onBack }) {
           )}
           {t.final?.penaltyWinner && (
             <div style={{ textAlign: 'center', color: 'var(--gold)', fontSize: 13, fontWeight: 700 }}>
-              🥅 Penalties Winner: {t.players.find(p => p.id === t.final.penaltyWinner)?.name}
+               inequalities Penalties Winner: {t.players.find(p => p.id === t.final.penaltyWinner)?.name}
             </div>
           )}
         </div>
@@ -117,11 +117,11 @@ function ManualHistoryDetails({ t, onBack }) {
 }
 
 export default function HistoryDetailsPage() {
-  const { viewHistoryId, historyTab, setHistoryTab, backToSetup, history } = useStore();
+  const { viewHistoryId, historyTab, setHistoryTab, goToHub, history } = useStore();
   const t = history.find(h => h.id === viewHistoryId);
 
   if (!t) return <div className="empty-state"><h3>Tournament Not Found</h3></div>;
-  if (t.isManual) return <ManualHistoryDetails t={t} onBack={backToSetup} />;
+  if (t.isManual) return <ManualHistoryDetails t={t} onBack={goToHub} />;
 
   const formattedDate = new Date(t.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
 
@@ -156,7 +156,7 @@ export default function HistoryDetailsPage() {
   return (
     <div className="profiles-page">
       <div className="profiles-hdr">
-        <button className="btn btn-sm btn-secondary" onClick={backToSetup}>← Back</button>
+        <button className="btn btn-sm btn-secondary" onClick={goToHub}>← Home</button>
         <span className="profiles-hdr-title">{t.name}</span>
         <span style={{ fontSize: 12, color: 'var(--t2)', marginRight: 12 }}>{formattedDate}</span>
       </div>

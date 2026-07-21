@@ -1,17 +1,17 @@
 import { create } from 'zustand';
 
 const useStore = create((set, get) => ({
-  // ─── View State ──────────────────────────────────────────────────────────
-  view:           'standings', // standings | fixtures | suspensions | playoffs
-  showProfiles:   false,
-  showStats:      false,
-  viewHistoryId:  null,
-  historyTab:     'standings',
+  // ─── Navigation & Views ──────────────────────────────────────────────────
+  activeView:           'hub', // hub | tournament | profiles | stats | historyDetails
+  selectedTournamentId: null,  // ID of currently viewed tournament (active or from history)
+  view:                 'standings', // standings | fixtures | suspensions | playoffs (tabs inside tournament view)
+  historyTab:           'standings', // standings | fixtures | redcards (tabs inside history view)
 
   // ─── Data (synced from Firestore) ─────────────────────────────────────
-  tournament: null,
-  history:    [],
-  profiles:   [],
+  tournament:    null,  // active in-progress tournament data from tournaments/active
+  history:       [],    // history collection
+  profiles:      [],    // profiles collection
+  adminPresence: null,  // { activeTournamentId, isEditing } from config/settings
 
   // ─── Modal ───────────────────────────────────────────────────────────────
   modal: null,
@@ -24,20 +24,21 @@ const useStore = create((set, get) => ({
     players: Array.from({ length: 6 }, () => ({ managerName: '', clubName: '', squad: [] })),
   },
 
-  // ─── Actions: View Navigation ────────────────────────────────────────────
-  setView:           (view)          => set({ view }),
-  goToProfiles:      ()              => set({ showProfiles: true }),
-  backFromProfiles:  ()              => set({ showProfiles: false }),
-  goToStats:         ()              => set({ showStats: true }),
-  backFromStats:     ()              => set({ showStats: false }),
-  viewHistory:       (id)            => set({ viewHistoryId: id, historyTab: 'standings' }),
-  backToSetup:       ()              => set({ viewHistoryId: null }),
-  setHistoryTab:     (tab)           => set({ historyTab: tab }),
+  // ─── Actions: Navigation ─────────────────────────────────────────────────
+  goToHub:             ()  => set({ activeView: 'hub' }),
+  goToTournament:      (id) => set({ activeView: 'tournament', selectedTournamentId: id, view: 'standings' }),
+  goToProfiles:        ()  => set({ activeView: 'profiles' }),
+  goToStats:           ()  => set({ activeView: 'stats' }),
+  viewHistory:         (id) => set({ activeView: 'historyDetails', selectedTournamentId: id, historyTab: 'standings' }),
+  
+  setView:             (view) => set({ view }),
+  setHistoryTab:       (tab)  => set({ historyTab: tab }),
 
-  // ─── Actions: Data Setters (called by useLiveData hook) ─────────────────
-  setTournament: (t) => set({ tournament: t }),
-  setHistory:    (h) => set({ history: h }),
-  setProfiles:   (p) => set({ profiles: p }),
+  // ─── Actions: Data Setters ───────────────────────────────────────────────
+  setTournament:    (t) => set({ tournament: t }),
+  setHistory:       (h) => set({ history: h }),
+  setProfiles:      (p) => set({ profiles: p }),
+  setAdminPresence: (p) => set({ adminPresence: p }),
 
   // ─── Actions: Modal ──────────────────────────────────────────────────────
   openModal:  (modal) => set({ modal }),
