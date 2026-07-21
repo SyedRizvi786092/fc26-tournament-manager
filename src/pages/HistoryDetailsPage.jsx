@@ -93,7 +93,7 @@ function ManualHistoryDetails({ t, onBack }) {
           )}
           {t.final?.penaltyWinner && (
             <div style={{ textAlign: 'center', color: 'var(--gold)', fontSize: 13, fontWeight: 700 }}>
-               inequalities Penalties Winner: {t.players.find(p => p.id === t.final.penaltyWinner)?.name}
+              🥅 Penalties Winner: {t.players.find(p => p.id === t.final.penaltyWinner)?.name}
             </div>
           )}
         </div>
@@ -117,8 +117,8 @@ function ManualHistoryDetails({ t, onBack }) {
 }
 
 export default function HistoryDetailsPage() {
-  const { viewHistoryId, historyTab, setHistoryTab, goToHub, history } = useStore();
-  const t = history.find(h => h.id === viewHistoryId);
+  const { selectedTournamentId, historyTab, setHistoryTab, goToHub, history } = useStore();
+  const t = history.find(h => h.id === selectedTournamentId);
 
   if (!t) return <div className="empty-state"><h3>Tournament Not Found</h3></div>;
   if (t.isManual) return <ManualHistoryDetails t={t} onBack={goToHub} />;
