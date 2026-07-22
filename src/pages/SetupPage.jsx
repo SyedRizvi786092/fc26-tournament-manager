@@ -262,11 +262,11 @@ export default function SetupPage() {
 
       {/* SECTION 3: COMPLETED TOURNAMENTS HISTORY */}
       <div className="setup-card" style={{ maxWidth: 720 }}>
-        <div className="setup-card-title" style={{ justifyContent: 'space-between' }}>
+        <div className="setup-card-title">
           🏆 Completed Tournaments ({completedTournaments.length})
           {isAdmin && (
             <button className="btn btn-sm btn-secondary" onClick={() => setShowPastModal(true)}
-              style={{ textTransform: 'none', letterSpacing: 0, fontSize: 13 }}>+ Add Past Tournament</button>
+              style={{ textTransform: 'none', letterSpacing: 0, fontSize: 13, marginLeft: 'auto' }}>+ Add Past Tournament</button>
           )}
         </div>
         {completedTournaments.length ? (

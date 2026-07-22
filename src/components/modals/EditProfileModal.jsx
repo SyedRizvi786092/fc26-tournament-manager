@@ -8,6 +8,9 @@ export default function EditProfileModal({ modal, readOnly = false, onClose, onS
   const [preferredClub, setPreferredClub] = useState(modal.preferredClub || '');
   const [squad,         setSquad]         = useState([...(modal.squad || [])]);
   const [squadInp,      setSquadInp]      = useState('');
+  // Track which player index is being renamed (null = none)
+  const [renamingIdx,   setRenamingIdx]   = useState(null);
+  const [renameVal,     setRenameVal]     = useState('');
 
   const addPlayer = () => {
     if (readOnly) return;
@@ -15,6 +18,20 @@ export default function EditProfileModal({ modal, readOnly = false, onClose, onS
     if (!name) return;
     setSquad(prev => [...prev, name]);
     setSquadInp('');
+  };
+
+  const startRename = (i) => {
+    setRenamingIdx(i);
+    setRenameVal(squad[i]);
+  };
+
+  const commitRename = (i) => {
+    const val = renameVal.trim();
+    if (val) {
+      setSquad(prev => prev.map((s, idx) => idx === i ? val : s));
+    }
+    setRenamingIdx(null);
+    setRenameVal('');
   };
 
   const handleSave = () => {
@@ -30,8 +47,12 @@ export default function EditProfileModal({ modal, readOnly = false, onClose, onS
     onClose();
   };
 
+  // Title logic per requirements:
+  // - readOnly (user): "Team Profile"
+  // - admin new:       "New Team Profile"
+  // - admin edit:      "Edit Team Profile"
   const title = readOnly
-    ? `${managerName || 'Team'} Roster`
+    ? 'Team Profile'
     : isNew ? 'New Team Profile' : 'Edit Team Profile';
 
   return (
@@ -39,7 +60,7 @@ export default function EditProfileModal({ modal, readOnly = false, onClose, onS
       <div className="modal-hdr">
         <div>
           <h3>{title}</h3>
-          {readOnly && <div className="sub">{preferredClub} · {squad.length} Squad Players</div>}
+          {/* No subheading for readOnly — card already shows club & squad count */}
         </div>
         <button className="modal-close" onClick={onClose}>✕</button>
       </div>
@@ -52,7 +73,8 @@ export default function EditProfileModal({ modal, readOnly = false, onClose, onS
                 onChange={e => setManagerName(e.target.value)} />
             </div>
             <div className="field">
-              <label>FC 26 Club (Preferred)</label>
+              {/* Removed "(Preferred)" from the label */}
+              <label>FC 26 Club</label>
               <input type="text" placeholder="e.g. Real Madrid" value={preferredClub}
                 onChange={e => setPreferredClub(e.target.value)} />
             </div>
@@ -68,10 +90,45 @@ export default function EditProfileModal({ modal, readOnly = false, onClose, onS
           <label>Squad Players ({squad.length})</label>
           <div className="squad-scroll" style={{ maxHeight: 220 }}>
             {squad.length ? squad.map((s, i) => (
-              <div key={i} className="squad-row" style={{ padding: '8px 12px' }}>
-                <span style={{ fontWeight: 500 }}>{s}</span>
-                {!readOnly && (
-                  <button className="rm-btn" onClick={() => setSquad(prev => prev.filter((_, idx) => idx !== i))}>×</button>
+              <div key={i} className="squad-row" style={{ padding: '6px 12px', gap: 8 }}>
+                {/* Inline rename: only for admin */}
+                {!readOnly && renamingIdx === i ? (
+                  <>
+                    <input
+                      autoFocus
+                      type="text"
+                      value={renameVal}
+                      onChange={e => setRenameVal(e.target.value)}
+                      onKeyDown={e => { if (e.key === 'Enter') commitRename(i); if (e.key === 'Escape') { setRenamingIdx(null); } }}
+                      style={{ flex: 1, background: 'rgba(255,255,255,.07)', border: '1px solid var(--green)', borderRadius: 6, padding: '4px 8px', color: 'var(--t1)', fontSize: 13 }}
+                    />
+                    <button
+                      className="add-btn"
+                      style={{ padding: '4px 10px', fontSize: 12 }}
+                      onClick={() => commitRename(i)}
+                    >✓</button>
+                    <button
+                      className="rm-btn"
+                      style={{ background: 'var(--card)', color: 'var(--t2)' }}
+                      onClick={() => setRenamingIdx(null)}
+                    >✕</button>
+                  </>
+                ) : (
+                  <>
+                    <span style={{ fontWeight: 500, flex: 1 }}>{s}</span>
+                    {!readOnly && (
+                      <>
+                        {/* Rename button */}
+                        <button
+                          title="Rename player"
+                          style={{ width: 26, height: 26, borderRadius: '50%', background: 'var(--blue-bg)', color: 'var(--blue)', fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all .2s', flexShrink: 0, border: '1px solid rgba(74,144,226,.2)' }}
+                          onClick={() => startRename(i)}
+                        >✏️</button>
+                        {/* Remove button */}
+                        <button className="rm-btn" onClick={() => setSquad(prev => prev.filter((_, idx) => idx !== i))}>×</button>
+                      </>
+                    )}
+                  </>
                 )}
               </div>
             )) : (
