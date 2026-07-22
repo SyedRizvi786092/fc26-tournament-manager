@@ -17,6 +17,18 @@ export default function LiveIndicator() {
     );
   }
 
+  if (tournament && tournament.status === 'complete') {
+    return (
+      <span
+        className="live-indicator live-completed"
+        title="Completed — all matches finished"
+      >
+        <span className="live-dot" style={{ animation: 'none' }} />
+        🏆 Completed
+      </span>
+    );
+  }
+
   const isLive = tournament && adminPresence?.isEditing && adminPresence?.activeTournamentId === tournament.id;
 
   return (

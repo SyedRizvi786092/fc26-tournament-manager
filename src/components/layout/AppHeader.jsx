@@ -1,26 +1,24 @@
 import useStore from '../../store/useStore.js';
 import { useAuth } from '../../contexts/AuthContext.jsx';
-import { useToast } from '../../contexts/ToastContext.jsx';
-import { addToHistory, clearActiveTournament, updateAdminPresence } from '../../services/firestoreService.js';
+import { updateAdminPresence } from '../../services/firestoreService.js';
 import LiveIndicator from '../ui/LiveIndicator.jsx';
 import { useEffect } from 'react';
 
 export default function AppHeader() {
-  const { tournament, view, setView, goToProfiles, goToStats, goToHub, openModal } = useStore();
+  const { tournament, view, setView, goToProfiles, goToStats, goToHub } = useStore();
   const { isAdmin } = useAuth();
-  const toast = useToast();
 
   if (!tournament) return null;
 
   // Track Admin presence: Live when inside tournament
   useEffect(() => {
-    if (isAdmin && tournament) {
+    if (isAdmin && tournament && tournament.status !== 'complete') {
       updateAdminPresence(tournament.id, true);
     }
   }, [isAdmin, tournament]);
 
   const handleBackToHub = async () => {
-    if (isAdmin && tournament) {
+    if (isAdmin && tournament && tournament.status !== 'complete') {
       await updateAdminPresence(tournament.id, false); // Switch presence to paused
     }
     goToHub();
@@ -35,34 +33,16 @@ export default function AppHeader() {
   const statusLabel = { league: 'League Phase', playoffs: 'Playoffs', complete: '🏆 Complete' }[t.status] || t.status;
   const statusColor = { league: 'var(--blue)', playoffs: 'var(--gold)', complete: 'var(--green)' }[t.status] || 'var(--t2)';
 
-  const tabs = [
+  const baseTabs = [
     { id: 'standings',   icon: '📊', label: 'Standings' },
     { id: 'fixtures',    icon: '📅', label: 'Fixtures' },
     { id: 'suspensions', icon: '🟥', label: 'Suspensions', badge: aS },
     { id: 'playoffs',    icon: '🏆', label: 'Playoffs' },
   ];
 
-  const handleNew = () => {
-    openModal({
-      type: 'confirm',
-      title: '🔄 Archive Tournament',
-      msg: t.status === 'complete'
-        ? 'Archive this completed tournament and start fresh? You can view its results anytime in history.'
-        : 'Archive this tournament to history? It will be saved as "In Progress" in history, and you can resume it later.',
-      onConfirm: async () => {
-        try {
-          if (isAdmin) await updateAdminPresence(null, false);
-          await addToHistory({ ...t });
-          await clearActiveTournament();
-          toast('Tournament archived to history ✓', 'ok');
-          goToHub();
-        } catch (err) {
-          console.error(err);
-          toast('Failed to archive tournament', 'err');
-        }
-      },
-    });
-  };
+  const tabs = t.status === 'complete'
+    ? [{ id: 'result', icon: '🏆', label: 'Result' }, ...baseTabs]
+    : baseTabs;
 
   return (
     <header className="app-header">
@@ -81,9 +61,6 @@ export default function AppHeader() {
           <div className="header-action-btns">
             <button className="btn btn-sm btn-secondary" onClick={goToStats}>📊 Stats</button>
             <button className="btn btn-sm btn-secondary" onClick={goToProfiles}>⚙️ Teams</button>
-            {isAdmin && (
-              <button className="btn btn-sm btn-danger" onClick={handleNew}> Archive</button>
-            )}
           </div>
         </div>
       </div>

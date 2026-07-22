@@ -10,11 +10,12 @@ import StandingsTable from '../components/tournament/StandingsTable.jsx';
 import FixturesList from '../components/tournament/FixturesList.jsx';
 import SuspensionsList from '../components/tournament/SuspensionsList.jsx';
 import PlayoffBracket from '../components/tournament/PlayoffBracket.jsx';
+import ResultTab from '../components/tournament/ResultTab.jsx';
 import ResultModal from '../components/modals/ResultModal.jsx';
 import ConfirmModal from '../components/modals/ConfirmModal.jsx';
 
 export default function MainPage() {
-  const { tournament, view, modal, openModal, closeModal } = useStore();
+  const { tournament, view, setView, modal, openModal, closeModal } = useStore();
   const { isAdmin } = useAuth();
   const toast = useToast();
 
@@ -66,6 +67,8 @@ export default function MainPage() {
       else    champ = fin.penaltyWinner;
       t.champion = champ;
       t.status   = 'complete';
+      // Automatically navigate owner & all watching users to Result tab!
+      setView('result');
     }
 
     await saveTournament(t);
@@ -73,11 +76,12 @@ export default function MainPage() {
   };
 
   const content = {
+    result:      <ResultTab      tournament={tournament} />,
     standings:   <StandingsTable tournament={tournament} />,
     fixtures:    <FixturesList   tournament={tournament} onOpen={isAdmin ? handleOpenResult : null} />,
     suspensions: <SuspensionsList tournament={tournament} />,
     playoffs:    <PlayoffBracket  tournament={tournament} onOpen={isAdmin ? handleOpenResult : null} />,
-  }[view] || <StandingsTable tournament={tournament} />;
+  }[view] || (tournament.status === 'complete' ? <ResultTab tournament={tournament} /> : <StandingsTable tournament={tournament} />);
 
   return (
     <div id="main-screen">

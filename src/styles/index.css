@@ -145,6 +145,7 @@ ul{list-style:none}
 .live-indicator{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;transition:all .2s;white-space:nowrap}
 .live-indicator.live-online{background:var(--green-bg);color:var(--green);border:1px solid rgba(0,200,150,.3)}
 .live-indicator.live-paused{background:var(--gold-bg);color:var(--gold);border:1px solid rgba(245,166,35,.3)}
+.live-indicator.live-completed{background:var(--green-bg);color:var(--green);border:1px solid rgba(0,200,150,.3)}
 .live-indicator.live-offline{background:var(--red-bg);color:var(--red);border:1px solid rgba(245,101,101,.3)}
 .live-dot{width:7px;height:7px;border-radius:50%;background:currentColor;display:inline-block;animation:pulse 2s infinite}
 

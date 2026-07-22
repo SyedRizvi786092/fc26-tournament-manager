@@ -2,6 +2,7 @@ import useStore from '../store/useStore.js';
 import StandingsTable from '../components/tournament/StandingsTable.jsx';
 import FixturesList from '../components/tournament/FixturesList.jsx';
 import FixtureCard from '../components/tournament/FixtureCard.jsx';
+import ResultTab from '../components/tournament/ResultTab.jsx';
 
 function renderHistoryRedCards(t) {
   const rcs = [];
@@ -49,6 +50,7 @@ function renderHistoryRedCards(t) {
 }
 
 function ManualHistoryDetails({ t, onBack }) {
+  const { setHistoryTab } = useStore();
   const champ     = t.players.find(p => p.id === t.champion);
   const finalist1 = t.players.find(p => p.id === t.final?.homeId);
   const finalist2 = t.players.find(p => p.id === t.final?.awayId);
@@ -129,6 +131,7 @@ export default function HistoryDetailsPage() {
   const fin  = t.fixtures.find(f => f.phase === 'final');
 
   const tabContent = {
+    result:    <ResultTab      tournament={t} isHistory />,
     standings: <StandingsTable tournament={t} isHistory />,
     fixtures: (
       <>
@@ -145,9 +148,10 @@ export default function HistoryDetailsPage() {
       </>
     ),
     redcards: renderHistoryRedCards(t),
-  }[historyTab];
+  }[historyTab] || <ResultTab tournament={t} isHistory />;
 
   const tabs = [
+    { id: 'result',    icon: '🏆', label: 'Result' },
     { id: 'standings', icon: '📊', label: 'Standings' },
     { id: 'fixtures',  icon: '📅', label: 'Matches' },
     { id: 'redcards',  icon: '🟥', label: 'Red Cards' },

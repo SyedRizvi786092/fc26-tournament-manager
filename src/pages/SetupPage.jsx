@@ -16,7 +16,7 @@ import { useState, useEffect } from 'react';
 
 export default function SetupPage() {
   const { setup, setSetup, resetSetup, history, profiles, tournament,
-          goToProfiles, goToStats, goToTournament, viewHistory, adminPresence,
+          goToProfiles, goToStats, goToTournament, setView, viewHistory, adminPresence,
           modal, openModal, closeModal } = useStore();
   const { isAdmin } = useAuth();
   const toast = useToast();
@@ -24,7 +24,7 @@ export default function SetupPage() {
 
   // Set admin presence to paused when on Home Hub
   useEffect(() => {
-    if (isAdmin && tournament) {
+    if (isAdmin && tournament && tournament.status !== 'complete') {
       updateAdminPresence(tournament.id, false);
     }
   }, [isAdmin, tournament]);
@@ -76,7 +76,7 @@ export default function SetupPage() {
     };
 
     // If there is an active tournament, move it to history first
-    if (tournament && tournament.status !== 'complete') {
+    if (tournament) {
       await addToHistory({ ...tournament });
     }
 
@@ -89,7 +89,7 @@ export default function SetupPage() {
 
   const handleResumeHistory = async (entry) => {
     // Resume an in-progress tournament from history
-    if (tournament && tournament.status !== 'complete' && tournament.id !== entry.id) {
+    if (tournament && tournament.id !== entry.id) {
       await addToHistory({ ...tournament });
     }
     await saveTournament(entry);
@@ -123,7 +123,7 @@ export default function SetupPage() {
     toast('Past tournament added to history ✓', 'ok');
   };
 
-  // Collect all in-progress tournaments (active + in-progress from history)
+  // Collect all in-progress tournaments
   const inProgressTournaments = [];
   if (tournament && tournament.status !== 'complete') {
     inProgressTournaments.push(tournament);
@@ -132,8 +132,11 @@ export default function SetupPage() {
     inProgressTournaments.push(h);
   });
 
-  // Collect completed tournaments
-  const completedTournaments = history.filter(h => h.status === 'complete');
+  // Collect completed tournaments (from history AND active if complete)
+  const completedTournaments = [...history.filter(h => h.status === 'complete')];
+  if (tournament && tournament.status === 'complete' && !completedTournaments.some(h => h.id === tournament.id)) {
+    completedTournaments.unshift(tournament);
+  }
 
   return (
     <div id="setup-screen">
@@ -269,8 +272,20 @@ export default function SetupPage() {
         {completedTournaments.length ? (
           completedTournaments.map(h => {
             const champ = h.players.find(p => p.id === h.champion);
+            const isCurrentActive = tournament?.id === h.id;
             return (
-              <div key={h.id} className="history-card" onClick={() => viewHistory(h.id)}>
+              <div
+                key={h.id}
+                className="history-card"
+                onClick={() => {
+                  if (isCurrentActive) {
+                    goToTournament(h.id);
+                    setView('result');
+                  } else {
+                    viewHistory(h.id);
+                  }
+                }}
+              >
                 <div className="trophy">🏆</div>
                 <div className="history-info">
                   <div className="history-name">{h.name}</div>
@@ -280,7 +295,7 @@ export default function SetupPage() {
                     &ensp;·&ensp;{new Date(h.createdAt).toLocaleDateString()}
                   </div>
                 </div>
-                {isAdmin && (
+                {isAdmin && !isCurrentActive && (
                   <button className="history-del" onClick={e => { e.stopPropagation(); handleDeleteHistory(h.id); }} title="Delete tournament">🗑️</button>
                 )}
               </div>
