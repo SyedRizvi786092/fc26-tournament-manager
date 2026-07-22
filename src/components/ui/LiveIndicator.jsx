@@ -1,17 +1,17 @@
 import { useNetworkStatus } from '../../hooks/useNetworkStatus.js';
 import useStore from '../../store/useStore.js';
 
-export default function LiveIndicator() {
+export default function LiveIndicator({ inline = false }) {
   const isOnline = useNetworkStatus();
   const { tournament, adminPresence } = useStore();
 
   if (!isOnline) {
     return (
       <span
-        className="live-indicator live-offline"
+        className={inline ? 'live-indicator-inline live-offline' : 'live-indicator live-offline'}
         title="Offline — changes queued locally"
       >
-        <span className="live-dot" />
+        {!inline && <span className="live-dot" />}
         Offline
       </span>
     );
@@ -20,10 +20,10 @@ export default function LiveIndicator() {
   if (tournament && tournament.status === 'complete') {
     return (
       <span
-        className="live-indicator live-completed"
+        className={inline ? 'live-indicator-inline live-completed' : 'live-indicator live-completed'}
         title="Completed — all matches finished"
       >
-        <span className="live-dot" style={{ animation: 'none' }} />
+        {!inline && <span className="live-dot" style={{ animation: 'none' }} />}
         🏆 Completed
       </span>
     );
@@ -33,11 +33,17 @@ export default function LiveIndicator() {
 
   return (
     <span
-      className={`live-indicator ${isLive ? 'live-online' : 'live-paused'}`}
-      title={isLive ? 'Live — Admin is actively managing this tournament' : 'Paused — Admin is on home page or away'}
+      className={inline
+        ? `live-indicator-inline ${isLive ? 'live-online' : 'live-paused'}`
+        : `live-indicator ${isLive ? 'live-online' : 'live-paused'}`
+      }
+      title={isLive
+        ? 'Live — Admin is actively managing this tournament'
+        : 'Paused — Admin is on home page or away'
+      }
     >
-      <span className="live-dot" />
-      {isLive ? 'Live' : 'Paused'}
+      {!inline && <span className="live-dot" />}
+      {isLive ? '🟢 Live' : '⏸ Paused'}
     </span>
   );
 }

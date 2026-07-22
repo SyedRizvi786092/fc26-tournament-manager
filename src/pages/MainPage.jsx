@@ -9,7 +9,6 @@ import AppFooter from '../components/layout/AppFooter.jsx';
 import StandingsTable from '../components/tournament/StandingsTable.jsx';
 import FixturesList from '../components/tournament/FixturesList.jsx';
 import SuspensionsList from '../components/tournament/SuspensionsList.jsx';
-import PlayoffBracket from '../components/tournament/PlayoffBracket.jsx';
 import ResultTab from '../components/tournament/ResultTab.jsx';
 import ResultModal from '../components/modals/ResultModal.jsx';
 import ConfirmModal from '../components/modals/ConfirmModal.jsx';
@@ -67,7 +66,7 @@ export default function MainPage() {
       else    champ = fin.penaltyWinner;
       t.champion = champ;
       t.status   = 'complete';
-      // Automatically navigate owner & all watching users to Result tab!
+      // Admin navigates immediately; non-admins are handled by useLiveData watching status change
       setView('result');
     }
 
@@ -75,13 +74,13 @@ export default function MainPage() {
     toast('Result saved ✓', 'ok');
   };
 
+  // Map of view id -> component
   const content = {
     result:      <ResultTab      tournament={tournament} />,
     standings:   <StandingsTable tournament={tournament} />,
     fixtures:    <FixturesList   tournament={tournament} onOpen={isAdmin ? handleOpenResult : null} />,
     suspensions: <SuspensionsList tournament={tournament} />,
-    playoffs:    <PlayoffBracket  tournament={tournament} onOpen={isAdmin ? handleOpenResult : null} />,
-  }[view] || (tournament.status === 'complete' ? <ResultTab tournament={tournament} /> : <StandingsTable tournament={tournament} />);
+  }[view] ?? (tournament.status === 'complete' ? <ResultTab tournament={tournament} /> : <StandingsTable tournament={tournament} />);
 
   return (
     <div id="main-screen">

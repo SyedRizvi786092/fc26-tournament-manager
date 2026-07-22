@@ -1,7 +1,6 @@
 import useStore from '../store/useStore.js';
 import StandingsTable from '../components/tournament/StandingsTable.jsx';
 import FixturesList from '../components/tournament/FixturesList.jsx';
-import FixtureCard from '../components/tournament/FixtureCard.jsx';
 import ResultTab from '../components/tournament/ResultTab.jsx';
 
 function renderHistoryRedCards(t) {
@@ -127,28 +126,13 @@ export default function HistoryDetailsPage() {
 
   const formattedDate = new Date(t.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
 
-  const elim = t.fixtures.find(f => f.phase === 'eliminator');
-  const fin  = t.fixtures.find(f => f.phase === 'final');
-
+  // FixturesList now includes Playoffs inline, so no need to manually append them
   const tabContent = {
     result:    <ResultTab      tournament={t} isHistory />,
     standings: <StandingsTable tournament={t} isHistory />,
-    fixtures: (
-      <>
-        <FixturesList tournament={t} isHistory />
-        {(elim || fin) && (
-          <>
-            <div className="sec-title" style={{ marginTop: 30 }}>Playoffs</div>
-            <div className="bracket" style={{ marginTop: 15 }}>
-              {elim && <div><div className="bracket-round-title">🔥 Eliminator</div><FixtureCard fixture={elim} tournament={t} isHistory /></div>}
-              {fin  && <div><div className="bracket-round-title">⭐ Grand Final</div><FixtureCard fixture={fin}  tournament={t} isHistory /></div>}
-            </div>
-          </>
-        )}
-      </>
-    ),
-    redcards: renderHistoryRedCards(t),
-  }[historyTab] || <ResultTab tournament={t} isHistory />;
+    fixtures:  <FixturesList   tournament={t} isHistory />,
+    redcards:  renderHistoryRedCards(t),
+  }[historyTab] ?? <ResultTab tournament={t} isHistory />;
 
   const tabs = [
     { id: 'result',    icon: '🏆', label: 'Result' },

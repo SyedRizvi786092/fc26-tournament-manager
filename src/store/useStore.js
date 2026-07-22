@@ -4,8 +4,8 @@ const useStore = create((set, get) => ({
   // ─── Navigation & Views ──────────────────────────────────────────────────
   activeView:           'hub', // hub | tournament | profiles | stats | historyDetails
   selectedTournamentId: null,  // ID of currently viewed tournament (active or from history)
-  view:                 'standings', // standings | fixtures | suspensions | playoffs (tabs inside tournament view)
-  historyTab:           'standings', // standings | fixtures | redcards (tabs inside history view)
+  view:                 'standings', // standings | fixtures | suspensions | result (tabs inside tournament view)
+  historyTab:           'result',   // result | standings | fixtures | redcards (tabs inside history view)
 
   // ─── Data (synced from Firestore) ─────────────────────────────────────
   tournament:    null,  // active in-progress tournament data from tournaments/active
@@ -25,14 +25,15 @@ const useStore = create((set, get) => ({
   },
 
   // ─── Actions: Navigation ─────────────────────────────────────────────────
-  goToHub:             ()  => set({ activeView: 'hub' }),
-  goToTournament:      (id) => set({ activeView: 'tournament', selectedTournamentId: id, view: 'standings' }),
-  goToProfiles:        ()  => set({ activeView: 'profiles' }),
-  goToStats:           ()  => set({ activeView: 'stats' }),
-  viewHistory:         (id) => set({ activeView: 'historyDetails', selectedTournamentId: id, historyTab: 'standings' }),
-  
-  setView:             (view) => set({ view }),
-  setHistoryTab:       (tab)  => set({ historyTab: tab }),
+  goToHub:        ()    => set({ activeView: 'hub' }),
+  goToTournament: (id)  => set({ activeView: 'tournament', selectedTournamentId: id, view: 'standings' }),
+  goToProfiles:   ()    => set({ activeView: 'profiles' }),
+  goToStats:      ()    => set({ activeView: 'stats' }),
+  // Default historyTab to 'result' so completed tournaments land on Result tab
+  viewHistory:    (id, defaultTab = 'result') => set({ activeView: 'historyDetails', selectedTournamentId: id, historyTab: defaultTab }),
+
+  setView:        (view) => set({ view }),
+  setHistoryTab:  (tab)  => set({ historyTab: tab }),
 
   // ─── Actions: Data Setters ───────────────────────────────────────────────
   setTournament:    (t) => set({ tournament: t }),

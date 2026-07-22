@@ -137,17 +137,22 @@ ul{list-style:none}
 .header-brand{display:flex;align-items:center;gap:10px;min-width:0}
 .header-brand-info{min-width:0}
 .header-name{font-size:16px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.header-status{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;margin-top:1px}
 .header-actions{display:flex;gap:10px;align-items:center;flex-shrink:0}
 .header-action-btns{display:flex;gap:6px;align-items:center}
 
-/* Live Indicator Badge */
+/* Live Indicator Badge (full pill, shown top-right in header) */
 .live-indicator{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;transition:all .2s;white-space:nowrap}
 .live-indicator.live-online{background:var(--green-bg);color:var(--green);border:1px solid rgba(0,200,150,.3)}
 .live-indicator.live-paused{background:var(--gold-bg);color:var(--gold);border:1px solid rgba(245,166,35,.3)}
 .live-indicator.live-completed{background:var(--green-bg);color:var(--green);border:1px solid rgba(0,200,150,.3)}
 .live-indicator.live-offline{background:var(--red-bg);color:var(--red);border:1px solid rgba(245,101,101,.3)}
 .live-dot{width:7px;height:7px;border-radius:50%;background:currentColor;display:inline-block;animation:pulse 2s infinite}
+/* Inline variant (below tournament name) */
+.live-indicator-inline{display:inline-block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-top:2px}
+.live-indicator-inline.live-online{color:var(--green)}
+.live-indicator-inline.live-paused{color:var(--gold)}
+.live-indicator-inline.live-completed{color:var(--green)}
+.live-indicator-inline.live-offline{color:var(--red)}
 
 @keyframes pulse {
   0% { opacity: 1; transform: scale(1); }

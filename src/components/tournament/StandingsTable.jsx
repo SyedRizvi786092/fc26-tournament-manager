@@ -4,16 +4,6 @@ export default function StandingsTable({ tournament, isHistory = false }) {
   if (!tournament) return null;
   const st = getStandings(tournament);
   const n  = tournament.players.length;
-  const champ = tournament.champion ? tournament.players.find(p => p.id === tournament.champion) : null;
-
-  const champBanner = champ ? (
-    <div className="champ-banner">
-      <div className="champ-trophy">🏆</div>
-      <div className="champ-label">Tournament Champion</div>
-      <div className="champ-name">{champ.name}</div>
-      <div className="champ-club">{champ.teamName}</div>
-    </div>
-  ) : null;
 
   const rows = st.map((s, i) => {
     let rowCls = '';
@@ -53,7 +43,6 @@ export default function StandingsTable({ tournament, isHistory = false }) {
 
   return (
     <>
-      {champBanner}
       <div className="standings-wrap">
         <table className="standings-table">
           <thead>

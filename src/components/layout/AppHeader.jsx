@@ -10,7 +10,7 @@ export default function AppHeader() {
 
   if (!tournament) return null;
 
-  // Track Admin presence: Live when inside tournament
+  // Track Admin presence: Live when inside tournament (not when complete)
   useEffect(() => {
     if (isAdmin && tournament && tournament.status !== 'complete') {
       updateAdminPresence(tournament.id, true);
@@ -19,7 +19,7 @@ export default function AppHeader() {
 
   const handleBackToHub = async () => {
     if (isAdmin && tournament && tournament.status !== 'complete') {
-      await updateAdminPresence(tournament.id, false); // Switch presence to paused
+      await updateAdminPresence(tournament.id, false);
     }
     goToHub();
   };
@@ -30,19 +30,13 @@ export default function AppHeader() {
   const pct     = lTotal ? Math.round((lPlayed / lTotal) * 100) : 0;
   const aS      = (t.suspensions || []).filter(s => !s.served).length;
 
-  const statusLabel = { league: 'League Phase', playoffs: 'Playoffs', complete: '🏆 Complete' }[t.status] || t.status;
-  const statusColor = { league: 'var(--blue)', playoffs: 'var(--gold)', complete: 'var(--green)' }[t.status] || 'var(--t2)';
-
-  const baseTabs = [
+  // Tabs: Result (only if complete) + Standings + Matches (merged fixtures+playoffs) + Suspensions
+  const tabs = [
+    ...(t.status === 'complete' ? [{ id: 'result', icon: '🏆', label: 'Result' }] : []),
     { id: 'standings',   icon: '📊', label: 'Standings' },
-    { id: 'fixtures',    icon: '📅', label: 'Fixtures' },
+    { id: 'fixtures',    icon: '📅', label: 'Matches' },
     { id: 'suspensions', icon: '🟥', label: 'Suspensions', badge: aS },
-    { id: 'playoffs',    icon: '🏆', label: 'Playoffs' },
   ];
-
-  const tabs = t.status === 'complete'
-    ? [{ id: 'result', icon: '🏆', label: 'Result' }, ...baseTabs]
-    : baseTabs;
 
   return (
     <header className="app-header">
@@ -52,12 +46,13 @@ export default function AppHeader() {
             ← Home
           </button>
           <div className="header-brand-info">
+            {/* Tournament name */}
             <div className="header-name">{t.name}</div>
-            <div className="header-status" style={{ color: statusColor }}>{statusLabel}</div>
+            {/* Live/Paused/Completed indicator replaces the status label */}
+            <LiveIndicator inline />
           </div>
         </div>
         <div className="header-actions">
-          <LiveIndicator />
           <div className="header-action-btns">
             <button className="btn btn-sm btn-secondary" onClick={goToStats}>📊 Stats</button>
             <button className="btn btn-sm btn-secondary" onClick={goToProfiles}>⚙️ Teams</button>
