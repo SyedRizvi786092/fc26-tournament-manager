@@ -5,7 +5,7 @@ import { uid } from '../logic/uid.js';
 import { generateFixtures } from '../logic/fixtures.js';
 import {
   saveTournament, addToHistory, deleteFromHistory,
-  saveProfile, updateAdminPresence,
+  updateAdminPresence,
 } from '../services/firestoreService.js';
 import PlayerSetupCard from '../components/setup/PlayerSetupCard.jsx';
 import AddPastTournamentModal from '../components/modals/AddPastTournamentModal.jsx';
@@ -51,23 +51,13 @@ export default function SetupPage() {
       const mgr = (p.managerName || '').trim(), club = (p.clubName || '').trim();
       if (!mgr)  { toast(`Player ${i + 1}: manager name required!`, 'err'); return; }
       if (!club) { toast(`Player ${i + 1}: club name required!`, 'err'); return; }
-      if ((p.squad || []).length < 3) { toast(`Player ${i + 1}: add at least 3 squad players!`, 'err'); return; }
-      players.push({ id: uid(), name: mgr, teamName: club, squad: p.squad.map(s => ({ id: uid(), name: s })) });
+      // Squad is optional — no minimum requirement
+      players.push({ id: uid(), name: mgr, teamName: club, squad: (p.squad || []).map(s => ({ id: uid(), name: s })) });
     }
     const names = players.map(p => p.name.toLowerCase());
     if (new Set(names).size !== names.length) { toast('Manager names must be unique!', 'err'); return; }
 
-    // Save profiles
-    for (const p of players) {
-      const existing = profiles.find(pr => pr.managerName.toLowerCase() === p.name.toLowerCase());
-      await saveProfile({
-        id:            existing?.id || uid(),
-        managerName:   p.name,
-        preferredClub: p.teamName,
-        squad:         p.squad.map(s => s.name),
-        lastUpdated:   new Date().toISOString(),
-      });
-    }
+    // Profiles are managed exclusively from Teams & Settings — no auto-save here
 
     const newT = {
       id: uid(), name, status: 'league', legs: setup.legs,

@@ -39,11 +39,10 @@ export default function ProfilesPage() {
 
   const openProfileModal = (p) =>
     setEditModal({
-      type: 'editProfile',
-      profileId:     p?.id            ?? null,
-      managerName:   p?.managerName   ?? '',
-      preferredClub: p?.preferredClub ?? '',
-      squad: p?.squad ? [...p.squad] : [],
+      type:        'editProfile',
+      profileId:   p?.id          ?? null,
+      managerName: p?.managerName ?? '',
+      teams:       p?.teams       ? [...p.teams] : [],
     });
 
   return (
@@ -63,9 +62,7 @@ export default function ProfilesPage() {
               <div className="fsr-sub">{isAdmin ? '👑 Admin — full access' : '👁️ Viewer — read-only access'}</div>
             </div>
             <div className="fsr-actions">
-              <button className="btn btn-sm btn-danger" onClick={handleSignOut}>
-                Sign Out
-              </button>
+              <button className="btn btn-sm btn-danger" onClick={handleSignOut}>Sign Out</button>
             </div>
           </div>
         </div>
@@ -80,36 +77,40 @@ export default function ProfilesPage() {
                 style={{ textTransform: 'none', letterSpacing: 0, fontSize: 13 }}>+ New Team</button>
             )}
           </div>
-          {profiles.length ? profiles.map(p => (
-            <div key={p.id} className="profile-card">
-              <div className="profile-avatar">⚽</div>
-              <div className="profile-info">
-                <div className="profile-name">{p.managerName}</div>
-                <div className="profile-club">{p.preferredClub}</div>
-                {/* Only show squad count — removed "Tap to view squad" badge */}
-                <div className="profile-meta">{(p.squad || []).length} squad players</div>
-              </div>
-              <div className="profile-actions">
-                {isAdmin ? (
-                  <>
-                    <button className="btn btn-sm btn-secondary"
-                      onClick={() => openProfileModal(p)}>
-                      ✏️ Edit
+          {profiles.length ? profiles.map(p => {
+            const teamCount  = (p.teams || []).length;
+            const squadTotal = (p.teams || []).reduce((acc, t) => acc + (t.squad?.length || 0), 0);
+            const clubLabel  = teamCount === 0 ? 'No teams'
+                             : teamCount === 1 ? p.teams[0].clubName
+                             : `${teamCount} teams`;
+            return (
+              <div key={p.id} className="profile-card">
+                <div className="profile-avatar">⚽</div>
+                <div className="profile-info">
+                  <div className="profile-name">{p.managerName}</div>
+                  <div className="profile-club">{clubLabel}</div>
+                  <div className="profile-meta">{squadTotal} total squad players</div>
+                </div>
+                <div className="profile-actions">
+                  {isAdmin ? (
+                    <>
+                      <button className="btn btn-sm btn-secondary" onClick={() => openProfileModal(p)}>
+                        ✏️ Edit
+                      </button>
+                      <button className="btn btn-sm btn-danger btn-icon"
+                        onClick={() => handleDeleteProfile(p.id)} title="Delete team">🗑️</button>
+                    </>
+                  ) : (
+                    <button className="btn btn-sm btn-secondary" onClick={() => openProfileModal(p)}>
+                      📋 Squad
                     </button>
-                    <button className="btn btn-sm btn-danger btn-icon"
-                      onClick={() => handleDeleteProfile(p.id)} title="Delete team">🗑️</button>
-                  </>
-                ) : (
-                  <button className="btn btn-sm btn-secondary"
-                    onClick={() => openProfileModal(p)}>
-                    📋 Squad
-                  </button>
-                )}
+                  )}
+                </div>
               </div>
-            </div>
-          )) : (
+            );
+          }) : (
             <EmptyState icon="👤" title="No Teams Saved Yet"
-              message="Team profiles are saved automatically when a tournament is created, or added manually above." />
+              message="Create team profiles here first. You can then select them when setting up a tournament." />
           )}
         </div>
       </div>

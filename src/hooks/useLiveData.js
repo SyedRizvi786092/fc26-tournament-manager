@@ -6,6 +6,7 @@ import {
   subscribeToProfiles,
   subscribeToSettings,
 } from '../services/firestoreService.js';
+import { migrateProfileShape } from '../logic/migrateProfile.js';
 
 /**
  * Sets up all Firestore real-time listeners.
@@ -19,44 +20,37 @@ export function useLiveData() {
 
   useEffect(() => {
     const unsubT = subscribeToTournament((t) => {
-      const prev = prevTournamentRef.current;
+      const prev  = prevTournamentRef.current;
       const store = useStore.getState();
 
-      // Tournament was deleted (admin finished it)
+      // Tournament was deleted (admin finished it) — send viewers back to hub
       if (!t && prev) {
-        // If any non-admin viewer is still on the tournament page, send them to hub
-        if (store.activeView === 'tournament') {
-          store.goToHub();
-        }
+        if (store.activeView === 'tournament') store.goToHub();
         prevTournamentRef.current = null;
         setTournament(null);
         return;
       }
 
-      // Tournament status just changed to 'complete' — auto-navigate ALL users to Result tab
+      // Status just became 'complete' — auto-navigate all viewers to Result tab
       if (t && prev && prev.status !== 'complete' && t.status === 'complete') {
-        if (store.activeView === 'tournament') {
-          store.setView('result');
-        }
+        if (store.activeView === 'tournament') store.setView('result');
       }
 
-      // Tournament was newly created or resumed — auto-navigate users who are on hub to tournament
-      // (Only happens if they were already viewing tournament and it was re-saved)
       prevTournamentRef.current = t;
       setTournament(t);
     });
 
     const unsubH = subscribeToHistory(setHistory);
-    const unsubP = subscribeToProfiles(setProfiles);
+
+    // Apply migration so all profile consumers always get the new multi-team shape
+    const unsubP = subscribeToProfiles(profiles => {
+      setProfiles(profiles.map(migrateProfileShape));
+    });
+
     const unsubS = subscribeToSettings(settings => {
       setAdminPresence(settings?.adminPresence || null);
     });
 
-    return () => {
-      unsubT();
-      unsubH();
-      unsubP();
-      unsubS();
-    };
+    return () => { unsubT(); unsubH(); unsubP(); unsubS(); };
   }, [setTournament, setHistory, setProfiles, setAdminPresence]);
 }
