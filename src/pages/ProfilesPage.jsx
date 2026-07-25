@@ -70,11 +70,11 @@ export default function ProfilesPage() {
         {/* Saved Teams */}
         <div className="setup-card">
           <div className="setup-card-title" style={{ justifyContent: 'space-between' }}>
-            👥 Saved Teams ({profiles.length})
+            👥 Saved Profiles ({profiles.length})
             {isAdmin && (
               <button className="btn btn-sm btn-primary"
                 onClick={() => openProfileModal(null)}
-                style={{ textTransform: 'none', letterSpacing: 0, fontSize: 13 }}>+ New Team</button>
+                style={{ textTransform: 'none', letterSpacing: 0, fontSize: 13 }}>+ New Profile</button>
             )}
           </div>
           {profiles.length ? profiles.map(p => {
