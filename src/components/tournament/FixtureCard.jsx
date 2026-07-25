@@ -14,18 +14,24 @@ export default function FixtureCard({ fixture, tournament, isHistory = false, on
   const isPlayed = fixture.status === 'played';
   const isLocked = fixture.status === 'locked';
 
-  let hCol = '', aCol = '';
+  let homeColor = 'var(--t1)';
+  let awayColor = 'var(--t1)';
   if (isPlayed) {
-    if      (fixture.homeScore > fixture.awayScore) { hCol = 'color:var(--green)'; aCol = 'color:var(--red)'; }
-    else if (fixture.awayScore > fixture.homeScore) { aCol = 'color:var(--green)'; hCol = 'color:var(--red)'; }
+    if (fixture.homeScore > fixture.awayScore) {
+      homeColor = 'var(--green)';
+      awayColor = 'var(--red)';
+    } else if (fixture.awayScore > fixture.homeScore) {
+      homeColor = 'var(--red)';
+      awayColor = 'var(--green)';
+    }
   }
 
   const scoreEl = isPlayed ? (
     <div className="fc-score">
       <div className="fc-score-nums">
-        <span style={{ color: hCol ? 'var(--green)' : undefined }}>{fixture.homeScore}</span>
+        <span style={{ color: homeColor }}>{fixture.homeScore}</span>
         <span className="fc-score-sep">–</span>
-        <span style={{ color: aCol ? 'var(--green)' : undefined }}>{fixture.awayScore}</span>
+        <span style={{ color: awayColor }}>{fixture.awayScore}</span>
       </div>
       {fixture.penaltyWinner && <div className="fc-pen-tag">Penalties</div>}
     </div>

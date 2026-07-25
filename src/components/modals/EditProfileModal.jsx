@@ -122,17 +122,17 @@ export default function EditProfileModal({ modal, readOnly = false, onClose, onS
 
       <div className="modal-body">
         {/* Manager Name */}
-        {!readOnly ? (
-          <div className="field">
-            <label>Manager Name</label>
+        <div className="field" style={{ marginBottom: 16 }}>
+          <label>Manager Name</label>
+          {!readOnly ? (
             <input type="text" placeholder="e.g. Alex" value={managerName}
               onChange={e => setManagerName(e.target.value)} />
-          </div>
-        ) : (
-          <div style={{ marginBottom: 16, padding: '10px 14px', background: 'rgba(255,255,255,.03)', borderRadius: 10, border: '1px solid var(--border)' }}>
-            <div style={{ fontWeight: 700, fontSize: 15 }}>{managerName}</div>
-          </div>
-        )}
+          ) : (
+            <div style={{ padding: '10px 14px', background: 'rgba(255,255,255,.03)', borderRadius: 10, border: '1px solid var(--border)', fontWeight: 700, fontSize: 15, color: 'var(--t1)' }}>
+              {managerName}
+            </div>
+          )}
+        </div>
 
         {/* Teams list */}
         <div className="field" style={{ marginBottom: 0 }}>
@@ -217,14 +217,14 @@ export default function EditProfileModal({ modal, readOnly = false, onClose, onS
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: 'var(--card)', border: '1px solid var(--border)', borderRadius: expandedTeamId === team.id ? '10px 10px 0 0' : 10, transition: 'border-radius .2s' }}>
                     {readOnly ? (
                       <button
-                        style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left', background: 'none', cursor: 'pointer' }}
+                        style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left', background: 'none', cursor: 'pointer', border: 'none', color: 'var(--t1)' }}
                         onClick={() => setExpandedTeamId(expandedTeamId === team.id ? null : team.id)}
                       >
                         <span style={{ fontSize: 13, color: 'var(--t2)', width: 14, flexShrink: 0 }}>
                           {expandedTeamId === team.id ? '▾' : '▸'}
                         </span>
                         <div>
-                          <div style={{ fontWeight: 600, fontSize: 14 }}>{team.clubName}</div>
+                          <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--t1)' }}>{team.clubName}</div>
                           <div style={{ fontSize: 12, color: 'var(--t2)' }}>
                             {team.squad.length > 0 ? `${team.squad.length} squad players` : 'No squad'}
                           </div>
