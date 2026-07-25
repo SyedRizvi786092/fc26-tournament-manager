@@ -1,26 +1,28 @@
 import { useState } from 'react';
 
 export default function PlayerSetupCard({ index, player, profiles, usedNames, onChange }) {
-  const [squadInp, setSquadInp] = useState('');
   const [showSugg, setShowSugg] = useState(false);
 
-  const suggestions = profiles.filter(p =>
-    (!player.managerName || p.managerName.toLowerCase().includes(player.managerName.toLowerCase())) &&
-    !usedNames.includes(p.managerName.trim().toLowerCase())
-  ).slice(0, 7);
+  // Build one suggestion row per team per matching manager profile
+  const suggestionItems = [];
+  profiles.forEach(p => {
+    if (usedNames.includes(p.managerName.trim().toLowerCase())) return;
+    if (player.managerName && !p.managerName.toLowerCase().includes(player.managerName.toLowerCase())) return;
+    (p.teams || []).forEach(team => {
+      suggestionItems.push({
+        managerName: p.managerName,
+        clubName:    team.clubName,
+        squad:       team.squad || [],
+      });
+    });
+  });
+  const suggestions = suggestionItems.slice(0, 8);
 
-  const addSquad = () => {
-    const name = squadInp.trim();
-    if (!name) return;
-    onChange({ squad: [...player.squad, name] });
-    setSquadInp('');
-  };
-
-  const applyProfile = (p) => {
+  const applyProfile = (item) => {
     onChange({
-      managerName: p.managerName,
-      clubName:    p.preferredClub,
-      squad:       [...p.squad],
+      managerName: item.managerName,
+      clubName:    item.clubName,
+      squad:       [...item.squad],
     });
     setShowSugg(false);
   };
@@ -35,16 +37,19 @@ export default function PlayerSetupCard({ index, player, profiles, usedNames, on
           <input
             type="text" id={`sm-${index}`} placeholder="e.g. Alex"
             value={player.managerName} autoComplete="off"
-            onChange={e => { onChange({ managerName: e.target.value }); setShowSugg(true); }}
+            onChange={e => { onChange({ managerName: e.target.value, clubName: '', squad: [] }); setShowSugg(true); }}
             onFocus={() => setShowSugg(true)}
             onBlur={() => setTimeout(() => setShowSugg(false), 180)}
           />
           {showSugg && suggestions.length > 0 && (
             <div className="sug-dropdown" style={{ display: 'block' }}>
-              {suggestions.map(p => (
-                <div key={p.id} className="sug-item" onMouseDown={() => applyProfile(p)}>
-                  <span className="sug-name">{p.managerName}</span>
-                  <span className="sug-club">{p.preferredClub}</span>
+              {suggestions.map((item, i) => (
+                <div key={i} className="sug-item" onMouseDown={() => applyProfile(item)}>
+                  <span className="sug-name">{item.managerName}</span>
+                  <span className="sug-club">
+                    {item.clubName}
+                    {item.squad.length > 0 ? ` · ${item.squad.length} players` : ' · no squad'}
+                  </span>
                 </div>
               ))}
             </div>
@@ -58,23 +63,12 @@ export default function PlayerSetupCard({ index, player, profiles, usedNames, on
           value={player.clubName} onChange={e => onChange({ clubName: e.target.value })} />
       </div>
 
-      <div className="field">
-        <label>Squad Players <span style={{ color: 'var(--t3)', fontWeight: 400, fontSize: 11 }}>(min 3)</span></label>
-        <div className="squad-scroll" style={{ maxHeight: 140 }}>
-          {player.squad.map((s, si) => (
-            <div key={si} className="squad-row">
-              <span>{s}</span>
-              <button className="rm-btn" onClick={() => onChange({ squad: player.squad.filter((_, idx) => idx !== si) })}>×</button>
-            </div>
-          ))}
+      {/* Squad info — shown as read-only confirmation when a profile team was loaded */}
+      {player.squad.length > 0 && (
+        <div style={{ fontSize: 12, color: 'var(--green)', marginTop: -6, paddingLeft: 2 }}>
+          ✓ {player.squad.length} squad players loaded from profile
         </div>
-        <div className="add-row">
-          <input type="text" id={`sp-${index}`} placeholder="Player name…"
-            value={squadInp} onChange={e => setSquadInp(e.target.value)}
-            onKeyDown={e => { if (e.key === 'Enter') addSquad(); }} />
-          <button className="add-btn" onClick={addSquad}>+ Add</button>
-        </div>
-      </div>
+      )}
     </div>
   );
 }
