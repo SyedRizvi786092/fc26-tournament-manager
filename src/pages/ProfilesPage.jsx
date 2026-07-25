@@ -89,7 +89,6 @@ export default function ProfilesPage() {
                 <div className="profile-info">
                   <div className="profile-name">{p.managerName}</div>
                   <div className="profile-club">{clubLabel}</div>
-                  <div className="profile-meta">{squadTotal} total squad players</div>
                 </div>
                 <div className="profile-actions">
                   {isAdmin ? (
@@ -102,7 +101,7 @@ export default function ProfilesPage() {
                     </>
                   ) : (
                     <button className="btn btn-sm btn-secondary" onClick={() => openProfileModal(p)}>
-                      📋 Squad
+                      📋 Teams
                     </button>
                   )}
                 </div>

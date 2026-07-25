@@ -55,10 +55,16 @@ function ManualHistoryDetails({ t, onBack }) {
   const finalist2 = t.players.find(p => p.id === t.final?.awayId);
   const formattedDate = new Date(t.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
 
-  let hCol = '', aCol = '';
+  let homeColor = 'var(--t1)';
+  let awayColor = 'var(--t1)';
   if (t.final) {
-    if      (t.final.homeScore > t.final.awayScore) { hCol = 'color:var(--green)'; aCol = 'color:var(--red)'; }
-    else if (t.final.awayScore > t.final.homeScore) { aCol = 'color:var(--green)'; hCol = 'color:var(--red)'; }
+    if (t.final.homeScore > t.final.awayScore) {
+      homeColor = 'var(--green)';
+      awayColor = 'var(--red)';
+    } else if (t.final.awayScore > t.final.homeScore) {
+      homeColor = 'var(--red)';
+      awayColor = 'var(--green)';
+    }
   }
 
   return (
@@ -82,13 +88,13 @@ function ManualHistoryDetails({ t, onBack }) {
               <div className="score-side">
                 <div className="score-side-name">{finalist1?.name || '—'}</div>
                 <div className="score-side-club">{finalist1?.teamName || '—'}</div>
-                <div style={{ fontSize: 36, fontWeight: 900, color: hCol ? 'var(--green)' : undefined }}>{t.final.homeScore}</div>
+                <div style={{ fontSize: 36, fontWeight: 900, color: homeColor }}>{t.final.homeScore}</div>
               </div>
               <span className="score-sep" style={{ fontSize: 32, paddingBottom: 0 }}>—</span>
               <div className="score-side">
                 <div className="score-side-name">{finalist2?.name || '—'}</div>
                 <div className="score-side-club">{finalist2?.teamName || '—'}</div>
-                <div style={{ fontSize: 36, fontWeight: 900, color: aCol ? 'var(--green)' : undefined }}>{t.final.awayScore}</div>
+                <div style={{ fontSize: 36, fontWeight: 900, color: awayColor }}>{t.final.awayScore}</div>
               </div>
             </div>
           )}
