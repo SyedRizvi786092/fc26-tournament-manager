@@ -118,8 +118,8 @@ function ManualHistoryDetails({ t, onBack }) {
 }
 
 export default function HistoryDetailsPage() {
-  const { selectedTournamentId, historyTab, setHistoryTab, goToHub, history } = useStore();
-  const t = history.find(h => h.id === selectedTournamentId);
+  const { selectedTournamentId, historyTab, setHistoryTab, goToHub, history, tournament } = useStore();
+  const t = history.find(h => h.id === selectedTournamentId) || (tournament?.id === selectedTournamentId ? tournament : null);
 
   if (!t) return <div className="empty-state"><h3>Tournament Not Found</h3></div>;
   if (t.isManual) return <ManualHistoryDetails t={t} onBack={goToHub} />;

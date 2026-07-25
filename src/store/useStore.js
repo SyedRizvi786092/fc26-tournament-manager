@@ -12,6 +12,7 @@ const useStore = create((set, get) => ({
   history:       [],    // history collection
   profiles:      [],    // profiles collection
   adminPresence: null,  // { activeTournamentId, isEditing } from config/settings
+  dataReady:     false, // true once tournament + history listeners have each fired once
 
   // ─── Modal ───────────────────────────────────────────────────────────────
   modal: null,
@@ -40,6 +41,7 @@ const useStore = create((set, get) => ({
   setHistory:       (h) => set({ history: h }),
   setProfiles:      (p) => set({ profiles: p }),
   setAdminPresence: (p) => set({ adminPresence: p }),
+  setDataReady:     (v) => set({ dataReady: v }),
 
   // ─── Actions: Modal ──────────────────────────────────────────────────────
   openModal:  (modal) => set({ modal }),

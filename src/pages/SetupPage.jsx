@@ -15,7 +15,7 @@ import Badge from '../components/ui/Badge.jsx';
 import { useState, useEffect } from 'react';
 
 export default function SetupPage() {
-  const { setup, setSetup, resetSetup, history, profiles, tournament,
+  const { setup, setSetup, resetSetup, history, profiles, tournament, dataReady,
           goToProfiles, goToStats, goToTournament, setView, viewHistory, adminPresence,
           modal, openModal, closeModal } = useStore();
   const { isAdmin } = useAuth();
@@ -144,7 +144,11 @@ export default function SetupPage() {
       {/* SECTION 1: IN PROGRESS TOURNAMENTS */}
       <div className="setup-card" style={{ maxWidth: 720 }}>
         <div className="setup-card-title">⏳ In Progress Tournaments ({inProgressTournaments.length})</div>
-        {inProgressTournaments.length ? (
+        {!dataReady ? (
+          <div style={{ padding: '24px 0', textAlign: 'center', color: 'var(--t2)', fontSize: 14 }}>
+            Loading tournaments…
+          </div>
+        ) : inProgressTournaments.length ? (
           inProgressTournaments.map(t => {
             const isCurrentActive = tournament?.id === t.id;
             const isLive = isCurrentActive && adminPresence?.isEditing;
@@ -158,8 +162,10 @@ export default function SetupPage() {
                 onClick={() => {
                   if (isCurrentActive) {
                     goToTournament(t.id);
-                  } else {
+                  } else if (isAdmin) {
                     handleResumeHistory(t);
+                  } else {
+                    viewHistory(t.id, 'standings');
                   }
                 }}
               >
