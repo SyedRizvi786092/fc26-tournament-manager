@@ -13,7 +13,7 @@ import { migrateProfileShape } from '../logic/migrateProfile.js';
  * Called once at the app root after auth is confirmed.
  */
 export function useLiveData() {
-  const { setTournament, setHistory, setProfiles, setAdminPresence } = useStore();
+  const { setTournament, setHistory, setProfiles, setAdminPresence, setDataReady } = useStore();
 
   // Track previous tournament status to detect status transitions
   const prevTournamentRef = useRef(null);
@@ -38,9 +38,13 @@ export function useLiveData() {
 
       prevTournamentRef.current = t;
       setTournament(t);
+      setDataReady(true);
     });
 
-    const unsubH = subscribeToHistory(setHistory);
+    const unsubH = subscribeToHistory(h => {
+      setHistory(h);
+      setDataReady(true);
+    });
 
     // Apply migration so all profile consumers always get the new multi-team shape
     const unsubP = subscribeToProfiles(profiles => {
