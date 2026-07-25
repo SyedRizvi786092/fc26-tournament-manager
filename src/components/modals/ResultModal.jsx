@@ -131,7 +131,7 @@ export default function ResultModal({ modal, tournament, onClose, onSave }) {
           <div className="rc-section-title">
             🟥 Red Cards{' '}
             <span style={{ fontWeight: 400, color: 'var(--t3)', textTransform: 'none', fontSize: 12 }}>
-              {home.squad.length || away.squad.length ? '(tap a player to toggle)' : '(enter player name)'}
+              (tap squad player or type name manually)
             </span>
           </div>
           <div className="rc-teams">
@@ -139,20 +139,16 @@ export default function ResultModal({ modal, tournament, onClose, onSave }) {
             <div>
               <div className="rc-team"><h5>{home.name}</h5></div>
               <div className="rc-players">
-                {home.squad.length
-                  ? pills(home.squad, home.id)
-                  : manualRcUI(home, homeRcInp, setHomeRcInp)
-                }
+                {home.squad.length > 0 && pills(home.squad, home.id)}
+                {manualRcUI(home, homeRcInp, setHomeRcInp)}
               </div>
             </div>
             {/* Away team */}
             <div>
               <div className="rc-team"><h5>{away.name}</h5></div>
               <div className="rc-players">
-                {away.squad.length
-                  ? pills(away.squad, away.id)
-                  : manualRcUI(away, awayRcInp, setAwayRcInp)
-                }
+                {away.squad.length > 0 && pills(away.squad, away.id)}
+                {manualRcUI(away, awayRcInp, setAwayRcInp)}
               </div>
             </div>
           </div>
