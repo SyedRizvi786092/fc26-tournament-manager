@@ -26,7 +26,7 @@ export default function ScenariosTab({ tournament }) {
   return (
     <div className="scenarios-tab-container">
       <div className="sec-title" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <span>🎯 Qualification Scenarios &amp; Math</span>
+        <span>🎯 Qualification Scenarios &amp; Requirements</span>
         <span style={{ fontSize: 12, fontWeight: 400, color: 'var(--t2)', textTransform: 'none' }}>
           {unplayedLeague.length} league match{unplayedLeague.length === 1 ? '' : 'es'} remaining
         </span>
@@ -35,14 +35,15 @@ export default function ScenariosTab({ tournament }) {
       <div style={{ background: 'rgba(255,255,255,.02)', border: '1px solid var(--border)', borderRadius: 12, padding: '12px 16px', marginBottom: 20, fontSize: 13, color: 'var(--t2)' }}>
         💡 <strong>Playoff Format:</strong>{' '}
         {numPlayers === 5
-          ? '1st Place goes directly to the Grand Final. 2nd & 3rd Place play in the Eliminator match.'
-          : 'The Top 2 teams in the league phase qualify directly to the Grand Final.'}
+          ? '1st Place advances directly to the Grand Final. 2nd & 3rd Place play in the Eliminator.'
+          : 'The Top 2 teams in the league phase advance to the Grand Final.'}
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
         {teamScenarios.map(t => (
           <div key={t.id} className="setup-card" style={{ padding: '16px 18px', marginBottom: 0 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10, marginBottom: 10 }}>
+            {/* Header: Manager Name, Club, Badge */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10, marginBottom: 12 }}>
               <div>
                 <div style={{ fontWeight: 700, fontSize: 16, color: 'var(--t1)' }}>{t.name}</div>
                 <div style={{ fontSize: 12, color: 'var(--t2)' }}>{t.teamName}</div>
@@ -50,42 +51,51 @@ export default function ScenariosTab({ tournament }) {
               <div>{getStatusBadge(t.status)}</div>
             </div>
 
-            {/* Points bar */}
-            <div style={{ marginBottom: 12 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: 'var(--t2)', marginBottom: 4 }}>
-                <span>Points Progress: <strong>{t.currentPts} pts</strong></span>
-                <span>Max Possible: <strong>{t.maxPts} pts</strong></span>
+            {/* Quick Stats Grid */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, background: 'rgba(255,255,255,.03)', borderRadius: 8, padding: '8px 12px', textAlign: 'center', marginBottom: 12, border: '1px solid var(--border)' }}>
+              <div>
+                <div style={{ fontSize: 11, color: 'var(--t3)', textTransform: 'uppercase' }}>Played</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--t1)' }}>{t.played}</div>
               </div>
-              <div style={{ height: 6, background: 'rgba(255,255,255,.07)', borderRadius: 3, overflow: 'hidden' }}>
-                <div
-                  style={{
-                    height: '100%',
-                    width: `${t.maxPts > 0 ? (t.currentPts / t.maxPts) * 100 : 0}%`,
-                    background: t.status.includes('qualified') ? 'var(--green)' : t.status === 'eliminated' ? 'var(--red)' : 'var(--gold)',
-                    borderRadius: 3,
-                    transition: 'width .3s ease',
-                  }}
-                />
+              <div>
+                <div style={{ fontSize: 11, color: 'var(--t3)', textTransform: 'uppercase' }}>Record</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--t1)' }}>{t.W}W - {t.D}D - {t.L}L</div>
+              </div>
+              <div>
+                <div style={{ fontSize: 11, color: 'var(--t3)', textTransform: 'uppercase' }}>Points</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--green)' }}>{t.currentPts}</div>
+              </div>
+              <div>
+                <div style={{ fontSize: 11, color: 'var(--t3)', textTransform: 'uppercase' }}>GD</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: t.GD > 0 ? 'var(--green)' : t.GD < 0 ? 'var(--red)' : 'var(--t1)' }}>
+                  {t.GD > 0 ? `+${t.GD}` : t.GD}
+                </div>
               </div>
             </div>
 
-            {/* Requirements list */}
-            <div style={{ background: 'rgba(0,0,0,.2)', borderRadius: 8, padding: '10px 12px', fontSize: 13 }}>
+            {/* Requirements & Target Box */}
+            <div style={{ background: 'rgba(0,0,0,.25)', border: '1px solid rgba(255,255,255,.06)', borderRadius: 8, padding: '12px 14px', fontSize: 13, display: 'flex', flexDirection: 'column', gap: 6 }}>
               {t.requirements.map((req, idx) => (
-                <div key={idx} style={{ color: req.startsWith('🟢') || req.startsWith('🔵') ? 'var(--green)' : req.startsWith('🔴') ? 'var(--t3)' : 'var(--t1)', padding: '2px 0' }}>
+                <div
+                  key={idx}
+                  style={{
+                    color: req.startsWith('🟢') || req.startsWith('🔵') ? 'var(--green)' : req.startsWith('🔴') ? 'var(--t3)' : 'var(--t1)',
+                    lineHeight: 1.4,
+                  }}
+                >
                   {req}
                 </div>
               ))}
             </div>
 
-            {/* Remaining fixtures list */}
+            {/* Remaining Fixtures List */}
             {t.remainingFixtures.length > 0 && (
-              <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid rgba(255,255,255,.05)', fontSize: 12, color: 'var(--t2)' }}>
-                <strong>Remaining Match{t.remainingFixtures.length > 1 ? 'es' : ''}:</strong>
+              <div style={{ marginTop: 12, paddingTop: 10, borderTop: '1px solid rgba(255,255,255,.05)', fontSize: 12, color: 'var(--t2)' }}>
+                <strong>Remaining Match{t.remainingFixtures.length > 1 ? 'es' : ''} ({t.remainingFixtures.length}):</strong>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 6 }}>
                   {t.remainingFixtures.map(rf => (
-                    <div key={rf.fixtureId} style={{ padding: '4px 8px', background: 'rgba(255,255,255,.04)', border: '1px solid var(--border)', borderRadius: 6 }}>
-                      Matchday {rf.matchday}: {rf.isHome ? 'vs' : '@'} {rf.opponentName} ({rf.opponentClub})
+                    <div key={rf.fixtureId} style={{ padding: '4px 10px', background: 'rgba(255,255,255,.04)', border: '1px solid var(--border)', borderRadius: 6, fontSize: 12 }}>
+                      Matchday {rf.matchday}: {rf.isHome ? 'vs' : '@'} <strong>{rf.opponentName}</strong> ({rf.opponentClub})
                     </div>
                   ))}
                 </div>

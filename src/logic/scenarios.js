@@ -1,8 +1,8 @@
 import { h2hPts } from './standings.js';
 
 /**
- * Simulates remaining league fixtures to determine early qualification locks
- * and human-readable scenarios for each team.
+ * Calculates mathematical qualification status and precise, wins-based requirements
+ * for all teams in a tournament during the league phase.
  */
 export function calculateScenarios(tournament) {
   if (!tournament || !tournament.players || !tournament.fixtures) {
@@ -16,7 +16,7 @@ export function calculateScenarios(tournament) {
   const playedLeague = tournament.fixtures.filter(f => f.phase === 'league' && f.status === 'played');
   const unplayedLeague = tournament.fixtures.filter(f => f.phase === 'league' && f.status !== 'played');
 
-  // Compute current points & base stats
+  // Compute current points & base stats for each team
   const baseMap = {};
   players.forEach(p => {
     baseMap[p.id] = { id: p.id, name: p.name, teamName: p.teamName, Pts: 0, GF: 0, GA: 0, GD: 0, P: 0, W: 0, D: 0, L: 0 };
@@ -35,14 +35,14 @@ export function calculateScenarios(tournament) {
     }
   });
 
-  // Calculate max possible points for each team
+  // Calculate remaining unplayed matches per team
   players.forEach(p => {
-    const remainingCount = unplayedLeague.filter(f => f.homeId === p.id || f.awayId === p.id).length;
-    baseMap[p.id].remainingCount = remainingCount;
-    baseMap[p.id].maxPts = baseMap[p.id].Pts + (remainingCount * 3);
+    const remainingFixtures = unplayedLeague.filter(f => f.homeId === p.id || f.awayId === p.id);
+    baseMap[p.id].remainingCount = remainingFixtures.length;
+    baseMap[p.id].maxPts = baseMap[p.id].Pts + (remainingFixtures.length * 3);
   });
 
-  // If no unplayed matches, standings are final
+  // If all league matches played, return final status
   if (unplayedLeague.length === 0) {
     const finalSt = Object.values(baseMap).sort((a, b) => b.Pts - a.Pts || b.GD - a.GD || b.GF - a.GF);
     return {
@@ -59,24 +59,29 @@ export function calculateScenarios(tournament) {
           teamName: p.teamName,
           rank,
           status: qualified ? (numPlayers === 5 && rank === 1 ? 'qualified_final' : 'qualified') : 'eliminated',
-          maxPts: st.Pts,
+          played: st.P,
           currentPts: st.Pts,
+          maxPts: st.Pts,
+          W: st.W, D: st.D, L: st.L, GD: st.GD,
           remainingCount: 0,
+          winsTarget: 0,
           remainingFixtures: [],
-          requirements: qualified ? ['Qualified for playoffs!'] : ['Eliminated from playoffs.'],
+          requirements: qualified
+            ? [numPlayers === 5 && rank === 1 ? '🏆 Finished 1st Place — Qualified for Grand Final!' : '✅ Qualified for Playoffs!']
+            : ['🔴 Eliminated from playoffs.'],
         };
       }),
     };
   }
 
-  // Permutation simulation over unplayed matches
-  // Cap at 7 unplayed matches for full 3^k simulation (3^7 = 2187 iterations); for more, sample key outcomes
+  // Simulation over unplayed matches
+  // Cap unplayed simulation array to 8 matches max for fast computation
   const simFixtures = unplayedLeague.slice(0, 8);
   const totalSims = Math.pow(3, simFixtures.length);
 
   const teamSimStats = {};
   players.forEach(p => {
-    teamSimStats[p.id] = { minRank: 99, maxRank: 0, ranks: [], qualCount: 0, directFinalCount: 0 };
+    teamSimStats[p.id] = { minRank: 99, maxRank: 0, qualCount: 0, directFinalCount: 0 };
   });
 
   for (let i = 0; i < totalSims; i++) {
@@ -143,12 +148,11 @@ export function calculateScenarios(tournament) {
     }
   });
 
-  // Build per-team scenarios & requirements
+  // Calculate wins needed for each team to guarantee qualification
   const teamScenarios = players.map(p => {
     const st = baseMap[p.id];
     const stats = teamSimStats[p.id];
-    const qualPct = Math.round((stats.qualCount / totalSims) * 100);
-    const directPct = Math.round((stats.directFinalCount / totalSims) * 100);
+    const remainingCount = st.remainingCount;
 
     const remainingFixtures = unplayedLeague
       .filter(f => f.homeId === p.id || f.awayId === p.id)
@@ -164,7 +168,7 @@ export function calculateScenarios(tournament) {
         };
       });
 
-    let status = 'contending'; // qualified | qualified_final | contending | eliminated
+    let status = 'contending'; // qualified_final | qualified | contending | eliminated
     if (numPlayers === 5) {
       if (stats.maxRank === 1) status = 'qualified_final';
       else if (stats.maxRank <= 3) status = 'qualified';
@@ -174,6 +178,79 @@ export function calculateScenarios(tournament) {
       else if (stats.minRank > 2) status = 'eliminated';
     }
 
+    // Determine minimum wins needed out of remainingCount matches to guarantee qualification 100%
+    let winsTarget = 99;
+    if (status === 'contending' && remainingCount > 0) {
+      for (let w = 0; w <= remainingCount; w++) {
+        // Test if adding w wins (and 0 draws) to team p guarantees top rank
+        let guaranteedInAllScenarios = true;
+
+        for (let i = 0; i < totalSims; i++) {
+          let temp = i;
+          const simPlayed = [...playedLeague];
+
+          for (let j = 0; j < simFixtures.length; j++) {
+            const outcome = temp % 3;
+            temp = Math.floor(temp / 3);
+            const f = simFixtures[j];
+
+            let hs = 0, as = 0;
+            // Override team p's fixtures to give team p 'w' wins
+            const isTeamHome = f.homeId === p.id;
+            const isTeamAway = f.awayId === p.id;
+
+            if (isTeamHome || isTeamAway) {
+              // Assume Team p wins
+              if (isTeamHome) { hs = 2; as = 0; }
+              else { hs = 0; as = 2; }
+            } else {
+              if (outcome === 0) { hs = 2; as = 0; }
+              else if (outcome === 1) { hs = 1; as = 1; }
+              else { hs = 0; as = 2; }
+            }
+
+            simPlayed.push({ homeId: f.homeId, awayId: f.awayId, homeScore: hs, awayScore: as });
+          }
+
+          // Evaluate rank of p
+          const simMap = {};
+          players.forEach(pl => { simMap[pl.id] = { id: pl.id, Pts: 0, GD: 0, GF: 0, GA: 0 }; });
+          simPlayed.forEach(f => {
+            const h = simMap[f.homeId], a = simMap[f.awayId];
+            if (h && a) {
+              h.GF += f.homeScore; h.GA += f.awayScore;
+              a.GF += f.awayScore; a.GA += f.homeScore;
+              h.GD = h.GF - h.GA; a.GD = a.GF - a.GA;
+              if      (f.homeScore > f.awayScore) { h.Pts += 3; }
+              else if (f.awayScore > f.homeScore) { a.Pts += 3; }
+              else { h.Pts++; a.Pts++; }
+            }
+          });
+
+          const simSorted = Object.values(simMap).sort((a, b) => {
+            if (b.Pts !== a.Pts) return b.Pts - a.Pts;
+            if (b.GD  !== a.GD)  return b.GD  - a.GD;
+            if (b.GF  !== a.GF)  return b.GF  - a.GF;
+            return h2hPts(b.id, a.id, simPlayed) - h2hPts(a.id, b.id, simPlayed);
+          });
+
+          const pRank = simSorted.findIndex(x => x.id === p.id) + 1;
+          if (pRank > targetRankCutoff) {
+            guaranteedInAllScenarios = false;
+            break;
+          }
+        }
+
+        if (guaranteedInAllScenarios) {
+          winsTarget = w;
+          break;
+        }
+      }
+    } else {
+      winsTarget = 0;
+    }
+
+    // Build human-readable requirement messages
     const requirements = [];
 
     if (status === 'qualified_final') {
@@ -183,25 +260,41 @@ export function calculateScenarios(tournament) {
     } else if (status === 'eliminated') {
       requirements.push('🔴 Mathematically eliminated from playoff contention.');
     } else {
-      // In contention logic
-      const ptsNeeded = Math.max(0, st.maxPts - st.Pts);
-      if (st.remainingCount === 1) {
-        const opp = remainingFixtures[0]?.opponentName || 'opponent';
-        if (qualPct >= 75) {
-          requirements.push(`Needs a win or draw vs ${opp} to lock qualification.`);
-        } else if (qualPct >= 50) {
-          requirements.push(`Must WIN final match vs ${opp} to qualify.`);
+      // Contending: Give clear wins-based target
+      const targetSpotName = numPlayers === 5 ? 'Top 3' : 'Top 2';
+
+      if (winsTarget <= remainingCount) {
+        if (winsTarget === 0) {
+          requirements.push(`🎯 Highly Favorable: A win or draw in remaining match(es) guarantees ${targetSpotName}.`);
+        } else if (winsTarget === 1 && remainingCount === 1) {
+          requirements.push(`🎯 Target: Needs 1 win in the final match to guarantee ${targetSpotName}.`);
+        } else if (winsTarget === 1 && remainingCount > 1) {
+          requirements.push(`🎯 Target: Needs 1 win from remaining ${remainingCount} matches to guarantee ${targetSpotName}.`);
         } else {
-          requirements.push(`Must WIN vs ${opp} and relies on other results to pass competitors.`);
+          requirements.push(`🎯 Target: Needs ${winsTarget} wins from remaining ${remainingCount} matches to guarantee ${targetSpotName}.`);
         }
-      } else if (st.remainingCount > 1) {
-        if (qualPct >= 80) {
-          requirements.push(`Needs 1 win from remaining ${st.remainingCount} matches to guarantee qualification.`);
-        } else {
-          requirements.push(`Must target at least ${Math.ceil(st.remainingCount * 1.5)} pts from ${st.remainingCount} remaining matches.`);
+      } else {
+        requirements.push(`🎯 Must win ALL ${remainingCount} remaining matches AND relies on other results to reach ${targetSpotName}.`);
+      }
+
+      // Check specific opponent matchday insights
+      if (remainingFixtures.length === 1) {
+        const rf = remainingFixtures[0];
+        requirements.push(`💡 Key Match (Matchday ${rf.matchday}): ${rf.isHome ? 'vs' : '@'} ${rf.opponentName} (${rf.opponentClub}).`);
+      } else if (remainingFixtures.length > 1) {
+        const nextRf = remainingFixtures[0];
+        requirements.push(`💡 Next Match (Matchday ${nextRf.matchday}): ${nextRf.isHome ? 'vs' : '@'} ${nextRf.opponentName}.`);
+      }
+
+      // Check Goal Difference note if GD is close to competitors
+      const closestCompetitor = players.find(x => x.id !== p.id && Math.abs(baseMap[x.id].Pts - st.Pts) <= 3);
+      if (closestCompetitor) {
+        const compSt = baseMap[closestCompetitor.id];
+        const gdDiff = st.GD - compSt.GD;
+        if (Math.abs(gdDiff) <= 3) {
+          requirements.push(`⚖️ Goal Difference Warning: Tied/close on GD with ${closestCompetitor.name} (${st.GD > 0 ? '+' : ''}${st.GD} vs ${compSt.GD > 0 ? '+' : ''}${compSt.GD}). Win margin matters!`);
         }
       }
-      requirements.push(`Current: ${st.Pts} pts (Max possible: ${st.maxPts} pts).`);
     }
 
     return {
@@ -209,13 +302,12 @@ export function calculateScenarios(tournament) {
       name: p.name,
       teamName: p.teamName,
       status,
+      played: st.P,
       currentPts: st.Pts,
       maxPts: st.maxPts,
-      remainingCount: st.remainingCount,
-      minRank: stats.minRank,
-      maxRank: stats.maxRank,
-      qualPct,
-      directPct,
+      W: st.W, D: st.D, L: st.L, GD: st.GD,
+      remainingCount,
+      winsTarget,
       remainingFixtures,
       requirements,
     };
