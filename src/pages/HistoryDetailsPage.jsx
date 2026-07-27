@@ -1,4 +1,7 @@
 import useStore from '../store/useStore.js';
+import { useAuth } from '../contexts/AuthContext.jsx';
+import { useToast } from '../contexts/ToastContext.jsx';
+import { deleteFromHistory, clearActiveTournament, updateAdminPresence } from '../services/firestoreService.js';
 import StandingsTable from '../components/tournament/StandingsTable.jsx';
 import FixturesList from '../components/tournament/FixturesList.jsx';
 import ResultTab from '../components/tournament/ResultTab.jsx';
@@ -100,7 +103,7 @@ function ManualHistoryDetails({ t, onBack }) {
           )}
           {t.final?.penaltyWinner && (
             <div style={{ textAlign: 'center', color: 'var(--gold)', fontSize: 13, fontWeight: 700 }}>
-              🥅 Penalties Winner: {t.players.find(p => p.id === t.final.penaltyWinner)?.name}
+              `🥅 Penalties Winner: {t.players.find(p => p.id === t.final.penaltyWinner)?.name}`
               {t.final.homePenScore != null && t.final.awayPenScore != null ? ` (${t.final.homePenScore}–${t.final.awayPenScore})` : ''}
             </div>
           )}
@@ -125,10 +128,30 @@ function ManualHistoryDetails({ t, onBack }) {
 }
 
 export default function HistoryDetailsPage() {
-  const { selectedTournamentId, historyTab, setHistoryTab, goToHub, history, tournament } = useStore();
+  const { selectedTournamentId, historyTab, setHistoryTab, goToHub, history, tournament, openModal } = useStore();
+  const { isAdmin } = useAuth();
+  const toast = useToast();
   const t = history.find(h => h.id === selectedTournamentId) || (tournament?.id === selectedTournamentId ? tournament : null);
 
   if (!t) return <div className="empty-state"><h3>Tournament Not Found</h3></div>;
+
+  const handleDelete = () => {
+    openModal({
+      type: 'confirm',
+      title: `🗑️ Delete "${t.name}"`,
+      msg: 'This will permanently remove this tournament. This action cannot be undone.',
+      onConfirm: async () => {
+        if (tournament?.id === t.id) {
+          await clearActiveTournament();
+          await updateAdminPresence(null, false);
+        }
+        await deleteFromHistory(t.id);
+        toast('Tournament deleted ✓', 'ok');
+        goToHub();
+      },
+    });
+  };
+
   if (t.isManual) return <ManualHistoryDetails t={t} onBack={goToHub} />;
 
   const formattedDate = new Date(t.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
@@ -154,6 +177,11 @@ export default function HistoryDetailsPage() {
         <button className="btn btn-sm btn-secondary" onClick={goToHub}>← Home</button>
         <span className="profiles-hdr-title">{t.name}</span>
         <span style={{ fontSize: 12, color: 'var(--t2)', marginRight: 12 }}>{formattedDate}</span>
+        {isAdmin && (
+          <button className="btn btn-sm btn-danger" onClick={handleDelete} style={{ marginLeft: 'auto' }}>
+            🗑️ Delete
+          </button>
+        )}
       </div>
       <div style={{ borderBottom: '1px solid var(--border)', background: 'rgba(7,9,15,.97)' }}>
         <div style={{ maxWidth: 860, margin: '0 auto', padding: '0 18px' }}>
