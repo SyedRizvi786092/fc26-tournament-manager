@@ -13,6 +13,8 @@ import ResultTab from '../components/tournament/ResultTab.jsx';
 import ResultModal from '../components/modals/ResultModal.jsx';
 import ConfirmModal from '../components/modals/ConfirmModal.jsx';
 
+import ScenariosTab from '../components/tournament/ScenariosTab.jsx';
+
 export default function MainPage() {
   const { tournament, view, setView, modal, openModal, closeModal } = useStore();
   const { isAdmin } = useAuth();
@@ -81,6 +83,7 @@ export default function MainPage() {
     result:      <ResultTab      tournament={tournament} />,
     standings:   <StandingsTable tournament={tournament} />,
     fixtures:    <FixturesList   tournament={tournament} onOpen={isAdmin ? handleOpenResult : null} />,
+    scenarios:   <ScenariosTab   tournament={tournament} />,
     suspensions: <SuspensionsList tournament={tournament} />,
   }[view] ?? (tournament.status === 'complete' ? <ResultTab tournament={tournament} /> : <StandingsTable tournament={tournament} />);
 

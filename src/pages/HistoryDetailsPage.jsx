@@ -5,6 +5,7 @@ import { deleteFromHistory, clearActiveTournament, updateAdminPresence } from '.
 import StandingsTable from '../components/tournament/StandingsTable.jsx';
 import FixturesList from '../components/tournament/FixturesList.jsx';
 import ResultTab from '../components/tournament/ResultTab.jsx';
+import ScenariosTab from '../components/tournament/ScenariosTab.jsx';
 
 function renderHistoryRedCards(t) {
   const rcs = [];
@@ -161,6 +162,7 @@ export default function HistoryDetailsPage() {
     result:    <ResultTab      tournament={t} isHistory />,
     standings: <StandingsTable tournament={t} isHistory />,
     fixtures:  <FixturesList   tournament={t} isHistory />,
+    scenarios: <ScenariosTab   tournament={t} />,
     redcards:  renderHistoryRedCards(t),
   }[historyTab] ?? <ResultTab tournament={t} isHistory />;
 
@@ -168,6 +170,7 @@ export default function HistoryDetailsPage() {
     { id: 'result',    icon: '🏆', label: 'Result' },
     { id: 'standings', icon: '📊', label: 'Standings' },
     { id: 'fixtures',  icon: '📅', label: 'Matches' },
+    { id: 'scenarios', icon: '🎯', label: 'Scenarios' },
     { id: 'redcards',  icon: '🟥', label: 'Red Cards' },
   ];
 
