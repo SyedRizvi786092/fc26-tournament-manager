@@ -101,6 +101,7 @@ function ManualHistoryDetails({ t, onBack }) {
           {t.final?.penaltyWinner && (
             <div style={{ textAlign: 'center', color: 'var(--gold)', fontSize: 13, fontWeight: 700 }}>
               🥅 Penalties Winner: {t.players.find(p => p.id === t.final.penaltyWinner)?.name}
+              {t.final.homePenScore != null && t.final.awayPenScore != null ? ` (${t.final.homePenScore}–${t.final.awayPenScore})` : ''}
             </div>
           )}
         </div>

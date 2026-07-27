@@ -27,7 +27,7 @@ export default function MainPage() {
     openModal({ type: 'result', fixtureId });
   };
 
-  const handleSaveResult = async (fixtureId, homeScore, awayScore, redCards, penaltyWinner) => {
+  const handleSaveResult = async (fixtureId, homeScore, awayScore, redCards, penaltyWinner, homePenScore, awayPenScore) => {
     let t = JSON.parse(JSON.stringify(tournament));
     const fixture = t.fixtures.find(f => f.id === fixtureId);
     const isEdit  = fixture.status === 'played';
@@ -40,6 +40,8 @@ export default function MainPage() {
     fixture.awayScore     = awayScore;
     fixture.redCards      = redCards;
     fixture.penaltyWinner = penaltyWinner || null;
+    fixture.homePenScore  = (homePenScore !== undefined && homePenScore !== null) ? homePenScore : null;
+    fixture.awayPenScore  = (awayPenScore !== undefined && awayPenScore !== null) ? awayPenScore : null;
 
     if (!isEdit) {
       fixture.status = 'played';

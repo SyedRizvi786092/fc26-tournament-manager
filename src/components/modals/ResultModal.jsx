@@ -9,6 +9,8 @@ export default function ResultModal({ modal, tournament, onClose, onSave }) {
 
   const [homeScore,     setHomeScore]     = useState(fixture?.homeScore    ?? '');
   const [awayScore,     setAwayScore]     = useState(fixture?.awayScore    ?? '');
+  const [homePenScore,  setHomePenScore]  = useState(fixture?.homePenScore ?? '');
+  const [awayPenScore,  setAwayPenScore]  = useState(fixture?.awayPenScore ?? '');
   const [redCards,      setRedCards]      = useState(JSON.parse(JSON.stringify(fixture?.redCards || [])));
   const [penaltyWinner, setPenaltyWinner] = useState(fixture?.penaltyWinner || null);
   const [homeRcInp,     setHomeRcInp]     = useState('');
@@ -84,7 +86,11 @@ export default function ResultModal({ modal, tournament, onClose, onSave }) {
     const hs2 = parseInt(homeScore), as2 = parseInt(awayScore);
     if (isNaN(hs2) || isNaN(as2) || hs2 < 0 || as2 < 0) return;
     if (isPO && hs2 === as2 && !penaltyWinner) return;
-    onSave(fixture.id, hs2, as2, redCards, penaltyWinner);
+
+    const hp = (isPO && hs2 === as2 && homePenScore !== '') ? parseInt(homePenScore) : null;
+    const ap = (isPO && hs2 === as2 && awayPenScore !== '') ? parseInt(awayPenScore) : null;
+
+    onSave(fixture.id, hs2, as2, redCards, penaltyWinner, hp, ap);
     onClose();
   };
 
@@ -101,7 +107,7 @@ export default function ResultModal({ modal, tournament, onClose, onSave }) {
             <div className="score-side-club">{home.teamName}</div>
             <input type="number" className="score-inp" min="0" max="99"
               value={homeScore} placeholder="0"
-              onChange={e => { setHomeScore(e.target.value); setPenaltyWinner(null); }} />
+              onChange={e => { setHomeScore(e.target.value); setPenaltyWinner(null); setHomePenScore(''); setAwayPenScore(''); }} />
           </div>
           <span className="score-sep">—</span>
           <div className="score-side">
@@ -109,13 +115,16 @@ export default function ResultModal({ modal, tournament, onClose, onSave }) {
             <div className="score-side-club">{away.teamName}</div>
             <input type="number" className="score-inp" min="0" max="99"
               value={awayScore} placeholder="0"
-              onChange={e => { setAwayScore(e.target.value); setPenaltyWinner(null); }} />
+              onChange={e => { setAwayScore(e.target.value); setPenaltyWinner(null); setHomePenScore(''); setAwayPenScore(''); }} />
           </div>
         </div>
 
         {isPO && isDraw && (
           <div className="pen-section">
-            <h4>🥅 Penalty Shootout Winner</h4>
+            <h4>`🥅 Penalty Shootout`</h4>
+            <div style={{ fontSize: 12, color: 'var(--t2)', marginBottom: 10 }}>
+              Select shootout winner &amp; enter penalty score:
+            </div>
             <div className="pen-btns">
               {[home, away].map(p => (
                 <button key={p.id} className={`pen-btn ${penaltyWinner === p.id ? 'sel' : ''}`}
@@ -123,6 +132,28 @@ export default function ResultModal({ modal, tournament, onClose, onSave }) {
                   {p.name} ({p.id === home.id ? 'Home' : 'Away'}) wins
                 </button>
               ))}
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, marginTop: 12 }}>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: 11, color: 'var(--t2)', marginBottom: 4 }}>{home.name} Pens</div>
+                <input
+                  type="number" min="0" max="99" placeholder="0"
+                  style={{ width: 64, height: 38, textAlign: 'center', fontSize: 18, fontWeight: 700, borderRadius: 8, background: 'rgba(255,255,255,.06)', border: '1px solid var(--border)', color: 'var(--t1)' }}
+                  value={homePenScore}
+                  onChange={e => setHomePenScore(e.target.value)}
+                />
+              </div>
+              <span style={{ fontWeight: 700, color: 'var(--t2)', fontSize: 18, marginTop: 16 }}>–</span>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: 11, color: 'var(--t2)', marginBottom: 4 }}>{away.name} Pens</div>
+                <input
+                  type="number" min="0" max="99" placeholder="0"
+                  style={{ width: 64, height: 38, textAlign: 'center', fontSize: 18, fontWeight: 700, borderRadius: 8, background: 'rgba(255,255,255,.06)', border: '1px solid var(--border)', color: 'var(--t1)' }}
+                  value={awayPenScore}
+                  onChange={e => setAwayPenScore(e.target.value)}
+                />
+              </div>
             </div>
           </div>
         )}
