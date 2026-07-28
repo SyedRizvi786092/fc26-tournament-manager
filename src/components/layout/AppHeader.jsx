@@ -30,12 +30,11 @@ export default function AppHeader() {
   const pct     = lTotal ? Math.round((lPlayed / lTotal) * 100) : 0;
   const aS      = (t.suspensions || []).filter(s => !s.served).length;
 
-  // Tabs: Result (only if complete) + Standings + Matches + Scenarios + Suspensions
+  // Tabs: Result (only if complete) + Standings + Matches (merged fixtures+playoffs) + Suspensions
   const tabs = [
     ...(t.status === 'complete' ? [{ id: 'result', icon: '🏆', label: 'Result' }] : []),
     { id: 'standings',   icon: '📊', label: 'Standings' },
     { id: 'fixtures',    icon: '📅', label: 'Matches' },
-    { id: 'scenarios',   icon: '🎯', label: 'Scenarios' },
     { id: 'suspensions', icon: '🟥', label: 'Suspensions', badge: aS },
   ];
 

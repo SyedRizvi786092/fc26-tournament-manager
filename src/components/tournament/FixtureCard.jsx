@@ -3,18 +3,13 @@ import Badge from '../ui/Badge.jsx';
 
 export default function FixtureCard({ fixture, tournament, isHistory = false, onOpen }) {
   if (!tournament) return null;
-  const home = tournament.players.find(p => p.id === fixture.homeId) || {
-    name: fixture.homeLabel || 'TBD',
-    teamName: fixture.homeSubLabel || '—',
-  };
-  const away = tournament.players.find(p => p.id === fixture.awayId) || {
-    name: fixture.awayLabel || 'TBD',
-    teamName: fixture.awaySubLabel || '—',
-  };
+  const home    = tournament.players.find(p => p.id === fixture.homeId);
+  const away    = tournament.players.find(p => p.id === fixture.awayId) || { name: 'TBD', teamName: '—' };
+  if (!home) return null;
 
-  const susps  = suspensionsForFixture(tournament.suspensions || [], fixture.id);
-  const homeSu = fixture.homeId ? susps.filter(s => s.teamId === fixture.homeId) : [];
-  const awaySu = fixture.awayId ? susps.filter(s => s.teamId === fixture.awayId) : [];
+  const susps  = suspensionsForFixture(tournament.suspensions, fixture.id);
+  const homeSu = susps.filter(s => s.teamId === fixture.homeId);
+  const awaySu = susps.filter(s => s.teamId === fixture.awayId);
 
   const isPlayed = fixture.status === 'played';
   const isLocked = fixture.status === 'locked';
