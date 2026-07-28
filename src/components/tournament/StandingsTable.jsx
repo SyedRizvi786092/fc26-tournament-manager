@@ -1,14 +1,9 @@
-import { useMemo } from 'react';
 import { getStandings } from '../../logic/standings.js';
-import { getQualificationStatus } from '../../logic/qualification.js';
 
 export default function StandingsTable({ tournament, isHistory = false }) {
   if (!tournament) return null;
   const st = getStandings(tournament);
   const n  = tournament.players.length;
-
-  const qualInfo = useMemo(() => getQualificationStatus(tournament), [tournament]);
-  const isLeaguePhase = tournament.status === 'league' && !isHistory && qualInfo != null;
 
   const rows = st.map((s, i) => {
     let rowCls = '';
@@ -17,20 +12,6 @@ export default function StandingsTable({ tournament, isHistory = false }) {
 
     const gd    = s.GD >= 0 ? `+${s.GD}` : `${s.GD}`;
     const gdCls = s.GD > 0 ? 'st-gd-pos' : s.GD < 0 ? 'st-gd-neg' : '';
-
-    let statusBadge = null;
-    if (isLeaguePhase && qualInfo.status[s.id]) {
-      const qStat = qualInfo.status[s.id];
-      if (qStat === 'qualified') {
-        const isFinalDirect = (n === 5 && qualInfo.lockedPositions[1] === s.id);
-        const label = n === 5 && !isFinalDirect ? 'Qualified for Eliminator' : 'Qualified for Final';
-        statusBadge = <span className="qual-tag qual-tag-q">🟢 {label}</span>;
-      } else if (qStat === 'eliminated') {
-        statusBadge = <span className="qual-tag qual-tag-e">🔴 Eliminated</span>;
-      } else {
-        statusBadge = <span className="qual-tag qual-tag-a">🟡 Still in Contention</span>;
-      }
-    }
 
     return (
       <tr key={s.id} className={rowCls}>
@@ -45,7 +26,6 @@ export default function StandingsTable({ tournament, isHistory = false }) {
         <td>{s.GF}</td><td>{s.GA}</td>
         <td className={gdCls}>{gd}</td>
         <td className="st-pts">{s.Pts}</td>
-        {isLeaguePhase && <td style={{ textAlign: 'center' }}>{statusBadge}</td>}
       </tr>
     );
   });
@@ -71,7 +51,6 @@ export default function StandingsTable({ tournament, isHistory = false }) {
               <th title="Played">P</th><th title="Won">W</th><th title="Drawn">D</th><th title="Lost">L</th>
               <th title="Goals For">GF</th><th title="Goals Against">GA</th>
               <th title="Goal Difference">GD</th><th title="Points">Pts</th>
-              {isLeaguePhase && <th title="Qualification Status" style={{ textAlign: 'center' }}>Status</th>}
             </tr>
           </thead>
           <tbody>{rows}</tbody>
