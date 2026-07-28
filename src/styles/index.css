@@ -197,6 +197,12 @@ ul{list-style:none}
 .leg-item{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--t2)}
 .leg-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
 
+/* Qualification Status Tags */
+.qual-tag{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:12px;font-size:11px;font-weight:700;white-space:nowrap}
+.qual-tag-q{background:var(--green-bg);color:var(--green);border:1px solid rgba(0,200,150,.25)}
+.qual-tag-a{background:var(--gold-bg);color:var(--gold);border:1px solid rgba(245,166,35,.25)}
+.qual-tag-e{background:var(--red-bg);color:var(--red);border:1px solid rgba(245,101,101,.25)}
+
 /* ──────────────────── FIXTURES ──────────────────── */
 .matchday-group{margin-bottom:26px}
 .matchday-hdr{display:flex;align-items:center;gap:10px;font-size:12px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.8px;margin-bottom:11px}
@@ -212,6 +218,9 @@ ul{list-style:none}
 .fixture-card.fc-final::after,.fixture-card.fc-final:hover::after{background:var(--gold)!important}
 .fixture-card.fc-elim::after,.fixture-card.fc-elim:hover::after{background:var(--blue)!important}
 .fixture-card.fc-locked{opacity:.5;cursor:not-allowed;pointer-events:none}
+.fixture-card.fc-preview{border-style:dashed;opacity:.8;cursor:default}
+.fixture-card.fc-preview:hover{transform:none;box-shadow:none}
+.preview-tbd{color:var(--t3);font-style:italic}
 
 .fc-teams{flex:1;display:flex;align-items:center;gap:10px;min-width:0}
 .fc-team{flex:1;min-width:0}
