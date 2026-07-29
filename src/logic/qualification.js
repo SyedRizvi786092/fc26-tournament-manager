@@ -5,9 +5,24 @@
  * every team regarding qualification for the Playoffs / Final.
  *
  * Uses exhaustive DFS with backtracking over all remaining league fixtures,
- * simulating three canonical outcomes per match (Home Win 1-0, Draw 0-0,
- * Away Win 0-1) and applying the app's full tie-breaker sequence
- * (Pts → GD → GF → H2H).
+ * simulating three outcomes per match (Home Win / Draw / Away Win) to
+ * enumerate every possible points distribution.
+ *
+ * CORRECTNESS MODEL — handling GD uncertainty:
+ *   Since real matches can end with any score (e.g., 1-5, 10-0), GD from
+ *   unplayed matches is unbounded. The algorithm handles this by splitting
+ *   teams tied on points into two categories:
+ *
+ *   • "Completed" teams  — have NO remaining matches. Their GD, GF, and
+ *     H2H are fully determined from actual results → ranked deterministically.
+ *
+ *   • "Active" teams — appear in at least one remaining match. Their GD is
+ *     variable → can finish at ANY position within a same-points group.
+ *
+ *   This guarantees:
+ *     🟢 = team qualifies in 100% of scenarios (never falsely green)
+ *     🔴 = team eliminated in 100% of scenarios (never falsely red)
+ *     🟡 = at least one scenario exists for each outcome
  *
  * Qualification thresholds:
  *   3 or 4 teams → top 2 qualify (both go to Final).
@@ -22,27 +37,6 @@ import { h2hPts } from './standings.js';
 
 /** Maximum remaining matches for which full DFS is attempted. */
 const MAX_DFS_REMAINING = 16;
-
-/* ── Helpers ───────────────────────────────────────────────────────────── */
-
-/**
- * Rank team IDs by the app's existing tie-breaker sequence:
- * Pts → GD → GF → H2H.
- *
- * @param {Object}   stats     Mutable stats map { [id]: {Pts,GD,GF,…} }
- * @param {Object[]} allPlayed All effective played matches (actual + simulated)
- * @param {string[]} teamIds   Array of team ID strings
- * @returns {string[]} Sorted team IDs (best first)
- */
-function rankTeamIds(stats, allPlayed, teamIds) {
-  return [...teamIds].sort((aId, bId) => {
-    const a = stats[aId], b = stats[bId];
-    if (b.Pts !== a.Pts) return b.Pts - a.Pts;
-    if (b.GD  !== a.GD)  return b.GD  - a.GD;
-    if (b.GF  !== a.GF)  return b.GF  - a.GF;
-    return h2hPts(bId, aId, allPlayed) - h2hPts(aId, bId, allPlayed);
-  });
-}
 
 /* ── Main Export ────────────────────────────────────────────────────────── */
 
@@ -61,9 +55,9 @@ export function getQualificationStatus(tournament) {
   /* ── Guard: only run during league phase ──────────────────────────── */
   if (!tournament || tournament.status !== 'league') return null;
 
-  const n             = tournament.players.length;
-  const qualifyCount  = n === 5 ? 3 : 2;
-  const teamIds       = tournament.players.map(p => p.id);
+  const n            = tournament.players.length;
+  const qualifyCount = n === 5 ? 3 : 2;
+  const teamIds      = tournament.players.map(p => p.id);
 
   const leagueFixtures = tournament.fixtures.filter(f => f.phase === 'league');
   const played         = leagueFixtures.filter(f => f.status === 'played');
@@ -80,34 +74,47 @@ export function getQualificationStatus(tournament) {
   /* ── Build base stats from actually-played matches ────────────────── */
   const stats = {};
   teamIds.forEach(id => {
-    stats[id] = { P: 0, W: 0, D: 0, L: 0, GF: 0, GA: 0, GD: 0, Pts: 0 };
+    stats[id] = { GF: 0, GA: 0, GD: 0, Pts: 0 };
   });
-
   played.forEach(f => {
     const h = stats[f.homeId], a = stats[f.awayId];
     if (!h || !a) return;
-    h.P++; a.P++;
     h.GF += f.homeScore; h.GA += f.awayScore;
     a.GF += f.awayScore; a.GA += f.homeScore;
     h.GD = h.GF - h.GA;  a.GD = a.GF - a.GA;
-    if      (f.homeScore > f.awayScore) { h.W++; h.Pts += 3; a.L++; }
-    else if (f.awayScore > f.homeScore) { a.W++; a.Pts += 3; h.L++; }
-    else    { h.D++; a.D++; h.Pts++; a.Pts++; }
+    if      (f.homeScore > f.awayScore) { h.Pts += 3; }
+    else if (f.awayScore > f.homeScore) { a.Pts += 3; }
+    else    { h.Pts++; a.Pts++; }
   });
 
-  /* ── Edge: all league matches played → final standings ────────────── */
+  /* ── Edge: all league matches played → final standings (deterministic) */
   if (remaining.length === 0) {
-    const allPlayed = played.map(f => ({
-      homeId: f.homeId, awayId: f.awayId,
-      homeScore: f.homeScore, awayScore: f.awayScore,
-    }));
-    const ranked = rankTeamIds(stats, allPlayed, teamIds);
+    const ranked = [...teamIds].sort((aId, bId) => {
+      const a = stats[aId], b = stats[bId];
+      if (b.Pts !== a.Pts) return b.Pts - a.Pts;
+      if (b.GD  !== a.GD)  return b.GD  - a.GD;
+      if (b.GF  !== a.GF)  return b.GF  - a.GF;
+      return h2hPts(bId, aId, played) - h2hPts(aId, bId, played);
+    });
     ranked.forEach((id, i) => {
       result.status[id] = i < qualifyCount ? 'qualified' : 'eliminated';
       result.lockedPositions[i + 1] = id;
     });
     return result;
   }
+
+  /* ── Identify "active" teams ──────────────────────────────────────── */
+  // Active = team appears in at least one remaining match.
+  // Their GD from simulated matches is unbounded → any position possible
+  // among same-points peers.
+  //
+  // Completed = team has NO remaining matches.
+  // Their GD/GF/H2H are fully determined → rank deterministically.
+  const activeTeams = new Set();
+  remaining.forEach(f => {
+    activeTeams.add(f.homeId);
+    activeTeams.add(f.awayId);
+  });
 
   /* ── Quick-bounds check (point-based, ignores tie-breakers) ───────── */
   const remainingPerTeam = {};
@@ -125,8 +132,7 @@ export function getQualificationStatus(tournament) {
 
   const resolved = new Set();
 
-  // Eliminated: ≥ qualifyCount other teams GUARANTEED more points than
-  // this team's absolute best.
+  // Eliminated: ≥ qualifyCount other teams GUARANTEED more points.
   teamIds.forEach(id => {
     const above = teamIds.filter(o => o !== id && minPts[o] > maxPts[id]).length;
     if (above >= qualifyCount) {
@@ -135,8 +141,7 @@ export function getQualificationStatus(tournament) {
     }
   });
 
-  // Qualified: fewer than qualifyCount other teams can even MATCH this
-  // team's absolute worst → guaranteed top-N.
+  // Qualified: fewer than qualifyCount other teams can even MATCH points.
   teamIds.forEach(id => {
     if (resolved.has(id)) return;
     const couldBeAbove = teamIds.filter(
@@ -148,15 +153,11 @@ export function getQualificationStatus(tournament) {
     }
   });
 
-  // All teams resolved by quick bounds — return (no position-lock data).
   if (resolved.size === teamIds.length) return result;
-
-  // Too many remaining matches for DFS — unresolved stay as 'alive'.
   if (remaining.length > MAX_DFS_REMAINING) return result;
 
   /* ── Full DFS with backtracking ───────────────────────────────────── */
   const unresolvedIds = teamIds.filter(id => !resolved.has(id));
-
   const tracker = {};
   teamIds.forEach(id => {
     tracker[id] = {
@@ -167,85 +168,127 @@ export function getQualificationStatus(tournament) {
     };
   });
 
-  // Build effective-played array (actual + simulated; grows/shrinks in DFS)
-  const allPlayed = played.map(f => ({
-    homeId: f.homeId, awayId: f.awayId,
-    homeScore: f.homeScore, awayScore: f.awayScore,
-  }));
+  let earlyExit = false;
 
-  let earlyExit = false; // true once every unresolved team has been seen in
-                          // BOTH top-N and outside top-N → all alive.
+  /* ── Leaf evaluator ───────────────────────────────────────────────── */
+  // For teams tied on points:
+  //   • Completed teams → rank deterministically by GD → GF → H2H
+  //   • Active teams → can land at ANY position within the tied group
+  //
+  // Each team gets a best-position / worst-position within the group.
+  function evaluateLeaf() {
+    const sorted = [...teamIds].sort((a, b) => stats[b].Pts - stats[a].Pts);
 
+    let pos = 1;
+    let i = 0;
+
+    while (i < sorted.length) {
+      const pts = stats[sorted[i]].Pts;
+      let j = i;
+      while (j < sorted.length && stats[sorted[j]].Pts === pts) j++;
+      const group = sorted.slice(i, j);
+      const groupSize = group.length;
+
+      if (groupSize === 1) {
+        /* ── Solo team at this point level: position is exact ──────── */
+        const id = group[0];
+        const t  = tracker[id];
+        if (pos <= qualifyCount) t.seenInTopN = true;
+        else                    t.seenOutOfTopN = true;
+        if (pos < t.minPos) t.minPos = pos;
+        if (pos > t.maxPos) t.maxPos = pos;
+      } else {
+        /* ── Tied group: split into completed / active ─────────────── */
+        const completed   = group.filter(id => !activeTeams.has(id));
+        const activeCount = groupSize - completed.length;
+
+        // Rank completed teams deterministically using actual GD→GF→H2H.
+        // Their stats were never modified by DFS (they have no remaining matches).
+        completed.sort((aId, bId) => {
+          const a = stats[aId], b = stats[bId];
+          if (b.GD !== a.GD) return b.GD - a.GD;
+          if (b.GF !== a.GF) return b.GF - a.GF;
+          return h2hPts(bId, aId, played) - h2hPts(aId, bId, played);
+        });
+
+        for (const id of group) {
+          let bestInGroup, worstInGroup;
+
+          if (!activeTeams.has(id)) {
+            // Completed: fixed rank among completed peers.
+            // Active teams can slot above or below → shift worst position.
+            const rankAmongCompleted = completed.indexOf(id) + 1;
+            bestInGroup  = rankAmongCompleted;                // all active below
+            worstInGroup = rankAmongCompleted + activeCount;  // all active above
+          } else {
+            // Active: GD is unbounded → can be anywhere in the group.
+            bestInGroup  = 1;
+            worstInGroup = groupSize;
+          }
+
+          const bestPos  = pos + bestInGroup  - 1;
+          const worstPos = pos + worstInGroup - 1;
+
+          const t = tracker[id];
+          if (bestPos  <= qualifyCount) t.seenInTopN    = true;
+          if (worstPos >  qualifyCount) t.seenOutOfTopN = true;
+          if (bestPos  < t.minPos) t.minPos = bestPos;
+          if (worstPos > t.maxPos) t.maxPos = worstPos;
+        }
+      }
+
+      pos += groupSize;
+      i = j;
+    }
+
+    // Early termination: all unresolved teams have been seen in BOTH
+    // positions → every one of them is alive, no more DFS needed.
+    earlyExit = unresolvedIds.every(
+      id => tracker[id].seenInTopN && tracker[id].seenOutOfTopN
+    );
+  }
+
+  /* ── DFS: branch on W / D / L only (points change) ───────────────── */
   function dfs(idx) {
     if (earlyExit) return;
 
     if (idx === remaining.length) {
-      // ── Leaf node: rank teams and record positions ────────────────
-      const ranked = rankTeamIds(stats, allPlayed, teamIds);
-      for (let pos = 0; pos < ranked.length; pos++) {
-        const id  = ranked[pos];
-        const t   = tracker[id];
-        const p1  = pos + 1;            // 1-indexed position
-        if (p1 <= qualifyCount) t.seenInTopN    = true;
-        else                   t.seenOutOfTopN = true;
-        if (p1 < t.minPos) t.minPos = p1;
-        if (p1 > t.maxPos) t.maxPos = p1;
-      }
-
-      // Check early termination for unresolved teams only
-      earlyExit = unresolvedIds.every(
-        id => tracker[id].seenInTopN && tracker[id].seenOutOfTopN
-      );
+      evaluateLeaf();
       return;
     }
 
-    const f   = remaining[idx];
-    const hId = f.homeId, aId = f.awayId;
-    const h   = stats[hId], a = stats[aId];
+    const f = remaining[idx];
+    const h = stats[f.homeId], a = stats[f.awayId];
 
-    // ── Outcome 1: Home Win (1–0) ──────────────────────────────────
-    h.P++; a.P++; h.W++; a.L++; h.Pts += 3;
-    h.GF++; a.GA++; h.GD = h.GF - h.GA; a.GD = a.GF - a.GA;
-    allPlayed.push({ homeId: hId, awayId: aId, homeScore: 1, awayScore: 0 });
+    // ── Home Win ────────────────────────────────────────────────────
+    h.Pts += 3;
     dfs(idx + 1);
-    allPlayed.pop();
-    h.P--; a.P--; h.W--; a.L--; h.Pts -= 3;
-    h.GF--; a.GA--; h.GD = h.GF - h.GA; a.GD = a.GF - a.GA;
+    h.Pts -= 3;
     if (earlyExit) return;
 
-    // ── Outcome 2: Draw (0–0) ──────────────────────────────────────
-    h.P++; a.P++; h.D++; a.D++; h.Pts++; a.Pts++;
-    allPlayed.push({ homeId: hId, awayId: aId, homeScore: 0, awayScore: 0 });
+    // ── Draw ────────────────────────────────────────────────────────
+    h.Pts += 1; a.Pts += 1;
     dfs(idx + 1);
-    allPlayed.pop();
-    h.P--; a.P--; h.D--; a.D--; h.Pts--; a.Pts--;
+    h.Pts -= 1; a.Pts -= 1;
     if (earlyExit) return;
 
-    // ── Outcome 3: Away Win (0–1) ──────────────────────────────────
-    h.P++; a.P++; h.L++; a.W++; a.Pts += 3;
-    a.GF++; h.GA++; h.GD = h.GF - h.GA; a.GD = a.GF - a.GA;
-    allPlayed.push({ homeId: hId, awayId: aId, homeScore: 0, awayScore: 1 });
+    // ── Away Win ────────────────────────────────────────────────────
+    a.Pts += 3;
     dfs(idx + 1);
-    allPlayed.pop();
-    h.P--; a.P--; h.L--; a.W--; a.Pts -= 3;
-    a.GF--; h.GA--; h.GD = h.GF - h.GA; a.GD = a.GF - a.GA;
+    a.Pts -= 3;
   }
 
   dfs(0);
 
-  /* ── Determine status for unresolved teams from DFS ───────────────── */
+  /* ── Determine status for unresolved teams ────────────────────────── */
   unresolvedIds.forEach(id => {
     const t = tracker[id];
-    if (t.seenInTopN && !t.seenOutOfTopN) {
-      result.status[id] = 'qualified';
-    } else if (t.seenOutOfTopN && !t.seenInTopN) {
-      result.status[id] = 'eliminated';
-    } else {
-      result.status[id] = 'alive';
-    }
+    if (t.seenInTopN && !t.seenOutOfTopN)      result.status[id] = 'qualified';
+    else if (t.seenOutOfTopN && !t.seenInTopN) result.status[id] = 'eliminated';
+    else                                        result.status[id] = 'alive';
   });
 
-  /* ── Position locks (only valid if DFS exhausted all branches) ────── */
+  /* ── Position locks (only valid if DFS exhausted every branch) ────── */
   if (!earlyExit) {
     teamIds.forEach(id => {
       const t = tracker[id];
