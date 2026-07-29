@@ -1,9 +1,20 @@
+import { useMemo } from 'react';
 import { getStandings } from '../../logic/standings.js';
+import { getQualificationStatus } from '../../logic/qualification.js';
 
 export default function StandingsTable({ tournament, isHistory = false }) {
   if (!tournament) return null;
   const st = getStandings(tournament);
   const n  = tournament.players.length;
+
+  // Compute qualification status (only during league phase of active tournament)
+  const qual = useMemo(() => {
+    if (isHistory) return null;
+    return getQualificationStatus(tournament);
+  }, [tournament, isHistory]);
+
+  const showQual = qual !== null;
+  const played   = tournament.fixtures.filter(f => f.phase === 'league' && f.status === 'played').length;
 
   const rows = st.map((s, i) => {
     let rowCls = '';
@@ -12,6 +23,15 @@ export default function StandingsTable({ tournament, isHistory = false }) {
 
     const gd    = s.GD >= 0 ? `+${s.GD}` : `${s.GD}`;
     const gdCls = s.GD > 0 ? 'st-gd-pos' : s.GD < 0 ? 'st-gd-neg' : '';
+
+    // Qualification badge
+    let qualBadge = null;
+    if (showQual && played > 0) {
+      const qs = qual.status[s.id];
+      qualBadge = qs === 'qualified'  ? <span className="qual-tag" title="Qualified for Final">🟢</span>
+               : qs === 'eliminated' ? <span className="qual-tag" title="Eliminated">🔴</span>
+               :                       <span className="qual-tag" title="Still in Contention">🟡</span>;
+    }
 
     return (
       <tr key={s.id} className={rowCls}>
@@ -26,20 +46,29 @@ export default function StandingsTable({ tournament, isHistory = false }) {
         <td>{s.GF}</td><td>{s.GA}</td>
         <td className={gdCls}>{gd}</td>
         <td className="st-pts">{s.Pts}</td>
+        {showQual && <td className="qual-status">{qualBadge}</td>}
       </tr>
     );
   });
 
-  const legend = n === 5 ? (
-    <div className="qual-legend">
+  // Position-based legend (what each row color means)
+  const posLegend = n === 5 ? (
+    <>
       <div className="leg-item"><div className="leg-dot" style={{ background: 'var(--green)' }} />Direct to Final (1st)</div>
       <div className="leg-item"><div className="leg-dot" style={{ background: 'var(--blue)' }} />Eliminator (2nd–3rd)</div>
-    </div>
+    </>
   ) : (
-    <div className="qual-legend">
-      <div className="leg-item"><div className="leg-dot" style={{ background: 'var(--green)' }} />Qualify for Final (Top 2)</div>
-    </div>
+    <div className="leg-item"><div className="leg-dot" style={{ background: 'var(--green)' }} />Qualify for Final (Top 2)</div>
   );
+
+  // Qualification status legend (only during league phase with matches played)
+  const qualLegend = showQual && played > 0 ? (
+    <>
+      <div className="leg-item">🟢 Qualified for {n === 5 ? 'Playoffs' : 'Final'}</div>
+      <div className="leg-item">🟡 Still in Contention</div>
+      <div className="leg-item">🔴 Eliminated</div>
+    </>
+  ) : null;
 
   return (
     <>
@@ -51,12 +80,16 @@ export default function StandingsTable({ tournament, isHistory = false }) {
               <th title="Played">P</th><th title="Won">W</th><th title="Drawn">D</th><th title="Lost">L</th>
               <th title="Goals For">GF</th><th title="Goals Against">GA</th>
               <th title="Goal Difference">GD</th><th title="Points">Pts</th>
+              {showQual && <th className="qual-status" title="Qualification Status"></th>}
             </tr>
           </thead>
           <tbody>{rows}</tbody>
         </table>
       </div>
-      {legend}
+      <div className="qual-legend">
+        {posLegend}
+        {qualLegend}
+      </div>
     </>
   );
 }

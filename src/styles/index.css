@@ -197,6 +197,24 @@ ul{list-style:none}
 .leg-item{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--t2)}
 .leg-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
 
+/* Qualification status tags in standings */
+.qual-status{width:36px;text-align:center!important}
+.qual-tag{display:inline-flex;align-items:center;justify-content:center;font-size:13px;line-height:1;width:22px;height:22px;border-radius:50%}
+
+/* Playoff preview cards (league phase) */
+.playoff-preview{display:flex;align-items:center;gap:13px;background:var(--card);border:1.5px dashed var(--border);border-radius:var(--r);padding:14px 17px;margin-bottom:9px;position:relative;overflow:hidden;opacity:.65;transition:opacity .2s}
+.playoff-preview:hover{opacity:.8}
+.playoff-preview.pv-final{border-color:rgba(245,166,35,.2)}
+.playoff-preview.pv-elim{border-color:rgba(74,144,226,.2)}
+.pv-teams{flex:1;display:flex;align-items:center;gap:10px;min-width:0}
+.pv-side{flex:1;min-width:0}
+.pv-home{text-align:left}
+.pv-away{text-align:right}
+.pv-name{font-weight:700;font-size:14px;color:var(--t1)}
+.pv-club{font-size:12px;color:var(--t2)}
+.pv-tbd{font-weight:600;font-size:14px;color:var(--t3);font-style:italic}
+.pv-vs{display:flex;flex-direction:column;align-items:center;flex-shrink:0;min-width:72px;font-size:13px;color:var(--t3);font-weight:600}
+
 /* ──────────────────── FIXTURES ──────────────────── */
 .matchday-group{margin-bottom:26px}
 .matchday-hdr{display:flex;align-items:center;gap:10px;font-size:12px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.8px;margin-bottom:11px}
