@@ -1,3 +1,4 @@
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import useStore from '../store/useStore.js';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { useToast } from '../contexts/ToastContext.jsx';
@@ -51,12 +52,11 @@ function renderHistoryRedCards(t) {
   );
 }
 
-function ManualHistoryDetails({ t, onBack }) {
-  const { setHistoryTab } = useStore();
+function ManualHistoryDetails({ t }) {
+  const formattedDate = new Date(t.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
   const champ     = t.players.find(p => p.id === t.champion);
   const finalist1 = t.players.find(p => p.id === t.final?.homeId);
   const finalist2 = t.players.find(p => p.id === t.final?.awayId);
-  const formattedDate = new Date(t.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
 
   let homeColor = 'var(--t1)';
   let awayColor = 'var(--t1)';
@@ -73,7 +73,7 @@ function ManualHistoryDetails({ t, onBack }) {
   return (
     <div className="profiles-page">
       <div className="profiles-hdr">
-        <button className="btn btn-sm btn-secondary" onClick={onBack}>← Home</button>
+        <Link to="/history" className="btn btn-sm btn-secondary">← History</Link>
         <span className="profiles-hdr-title">{t.name} (Retro)</span>
         <span style={{ fontSize: 12, color: 'var(--t2)', marginRight: 12 }}>{formattedDate}</span>
       </div>
@@ -103,7 +103,7 @@ function ManualHistoryDetails({ t, onBack }) {
           )}
           {t.final?.penaltyWinner && (
             <div style={{ textAlign: 'center', color: 'var(--gold)', fontSize: 13, fontWeight: 700 }}>
-              `🥅 Penalties Winner: {t.players.find(p => p.id === t.final.penaltyWinner)?.name}`
+              ` presentation: 🥅 Penalties Winner: {t.players.find(p => p.id === t.final.penaltyWinner)?.name}`
               {t.final.homePenScore != null && t.final.awayPenScore != null ? ` (${t.final.homePenScore}–${t.final.awayPenScore})` : ''}
             </div>
           )}
@@ -128,12 +128,15 @@ function ManualHistoryDetails({ t, onBack }) {
 }
 
 export default function HistoryDetailsPage() {
-  const { selectedTournamentId, historyTab, setHistoryTab, goToHub, history, tournament, openModal } = useStore();
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const { historyTab, setHistoryTab, history, tournament, openModal } = useStore();
   const { isAdmin } = useAuth();
   const toast = useToast();
-  const t = history.find(h => h.id === selectedTournamentId) || (tournament?.id === selectedTournamentId ? tournament : null);
 
-  if (!t) return <div className="empty-state"><h3>Tournament Not Found</h3></div>;
+  const t = history.find(h => h.id === id) || (tournament?.id === id ? tournament : null);
+
+  if (!t) return <div className="empty-state"><h3>Tournament Not Found</h3><Link to="/history" className="btn btn-secondary" style={{ marginTop: 12 }}>Back to History</Link></div>;
 
   const handleDelete = () => {
     openModal({
@@ -147,16 +150,15 @@ export default function HistoryDetailsPage() {
         }
         await deleteFromHistory(t.id);
         toast('Tournament deleted ✓', 'ok');
-        goToHub();
+        navigate('/history');
       },
     });
   };
 
-  if (t.isManual) return <ManualHistoryDetails t={t} onBack={goToHub} />;
+  if (t.isManual) return <ManualHistoryDetails t={t} />;
 
   const formattedDate = new Date(t.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
 
-  // FixturesList now includes Playoffs inline, so no need to manually append them
   const tabContent = {
     result:    <ResultTab      tournament={t} isHistory />,
     standings: <StandingsTable tournament={t} isHistory />,
@@ -174,7 +176,7 @@ export default function HistoryDetailsPage() {
   return (
     <div className="profiles-page">
       <div className="profiles-hdr">
-        <button className="btn btn-sm btn-secondary" onClick={goToHub}>← Home</button>
+        <Link to="/history" className="btn btn-sm btn-secondary">← History</Link>
         <span className="profiles-hdr-title">{t.name}</span>
         <span style={{ fontSize: 12, color: 'var(--t2)', marginRight: 12 }}>{formattedDate}</span>
         {isAdmin && (

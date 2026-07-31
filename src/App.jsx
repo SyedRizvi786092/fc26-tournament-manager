@@ -1,24 +1,29 @@
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './contexts/AuthContext.jsx';
 import { useLiveData } from './hooks/useLiveData.js';
-import useStore from './store/useStore.js';
 import AuthPage from './pages/AuthPage.jsx';
 import AdminSetupPage from './pages/AdminSetupPage.jsx';
-import SetupPage from './pages/SetupPage.jsx';
-import MainPage from './pages/MainPage.jsx';
+import HomePage from './pages/HomePage.jsx';
+import HistoryPage from './pages/HistoryPage.jsx';
+import HistoryDetailsPage from './pages/HistoryDetailsPage.jsx';
 import ProfilesPage from './pages/ProfilesPage.jsx';
 import StatsPage from './pages/StatsPage.jsx';
-import HistoryDetailsPage from './pages/HistoryDetailsPage.jsx';
+import MainPage from './pages/MainPage.jsx';
 
-function AppContent() {
+function AppRoutes() {
   useLiveData(); // start all Firestore listeners
 
-  const { activeView } = useStore();
-
-  if (activeView === 'profiles')       return <ProfilesPage />;
-  if (activeView === 'stats')          return <StatsPage />;
-  if (activeView === 'historyDetails') return <HistoryDetailsPage />;
-  if (activeView === 'tournament')     return <MainPage />;
-  return <SetupPage />;
+  return (
+    <Routes>
+      <Route path="/" element={<HomePage />} />
+      <Route path="/history" element={<HistoryPage />} />
+      <Route path="/history/:id" element={<HistoryDetailsPage />} />
+      <Route path="/stats" element={<StatsPage />} />
+      <Route path="/teams" element={<ProfilesPage />} />
+      <Route path="/tournament/:id" element={<MainPage />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
 }
 
 export default function App() {
@@ -38,5 +43,9 @@ export default function App() {
   if (!currentUser)  return <AuthPage />;
   if (setupNeeded)   return <AdminSetupPage />;
 
-  return <AppContent />;
+  return (
+    <BrowserRouter>
+      <AppRoutes />
+    </BrowserRouter>
+  );
 }

@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import useStore from '../../store/useStore.js';
 import { useAuth } from '../../contexts/AuthContext.jsx';
 import { updateAdminPresence } from '../../services/firestoreService.js';
@@ -5,7 +6,7 @@ import LiveIndicator from '../ui/LiveIndicator.jsx';
 import { useEffect } from 'react';
 
 export default function AppHeader() {
-  const { tournament, view, setView, goToProfiles, goToStats, goToHub } = useStore();
+  const { tournament, view, setView } = useStore();
   const { isAdmin } = useAuth();
 
   if (!tournament) return null;
@@ -21,7 +22,6 @@ export default function AppHeader() {
     if (isAdmin && tournament && tournament.status !== 'complete') {
       await updateAdminPresence(tournament.id, false);
     }
-    goToHub();
   };
 
   const t = tournament;
@@ -42,9 +42,9 @@ export default function AppHeader() {
     <header className="app-header">
       <div className="header-top">
         <div className="header-brand">
-          <button className="btn btn-sm btn-secondary nav-home-btn" onClick={handleBackToHub}>
+          <Link to="/" className="btn btn-sm btn-secondary nav-home-btn" onClick={handleBackToHub}>
             ← Home
-          </button>
+          </Link>
           <div className="header-brand-info">
             {/* Tournament name */}
             <div className="header-name">{t.name}</div>
@@ -54,8 +54,8 @@ export default function AppHeader() {
         </div>
         <div className="header-actions">
           <div className="header-action-btns">
-            <button className="btn btn-sm btn-secondary" onClick={goToStats}>📊 Stats</button>
-            <button className="btn btn-sm btn-secondary" onClick={goToProfiles}>⚙️ Teams</button>
+            <Link to="/stats" className="btn btn-sm btn-secondary">📊 Stats</Link>
+            <Link to="/teams" className="btn btn-sm btn-secondary">⚙️ Teams</Link>
           </div>
         </div>
       </div>

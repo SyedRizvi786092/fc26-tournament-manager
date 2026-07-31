@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import useStore from '../store/useStore.js';
 
 function getManagerStats(history) {
@@ -46,7 +47,7 @@ export default function StatsPage() {
   return (
     <div className="profiles-page">
       <div className="profiles-hdr">
-        <button className="btn btn-sm btn-secondary" onClick={goToHub}>← Home</button>
+        <Link to="/" className="btn btn-sm btn-secondary">← Home</Link>
         <span className="profiles-hdr-title">Manager Leaderboard &amp; Stats</span>
       </div>
 
