@@ -33,7 +33,13 @@ export default function FixtureCard({ fixture, tournament, isHistory = false, on
         <span className="fc-score-sep">–</span>
         <span style={{ color: awayColor }}>{fixture.awayScore}</span>
       </div>
-      {fixture.penaltyWinner && <div className="fc-pen-tag">Penalties</div>}
+      {fixture.penaltyWinner && (
+        <div className="fc-pen-tag">
+          {fixture.homePenScore != null && fixture.awayPenScore != null
+            ? `Penalties (${fixture.homePenScore}–${fixture.awayPenScore})`
+            : 'Penalties'}
+        </div>
+      )}
     </div>
   ) : isLocked ? (
     <div className="fc-score"><div className="fc-score-vs" style={{ fontSize: 12 }}>TBD</div></div>

@@ -4,7 +4,7 @@ import { useToast } from '../contexts/ToastContext.jsx';
 import { uid } from '../logic/uid.js';
 import { generateFixtures } from '../logic/fixtures.js';
 import {
-  saveTournament, addToHistory, deleteFromHistory,
+  saveTournament, addToHistory, deleteFromHistory, clearActiveTournament,
   updateAdminPresence,
 } from '../services/firestoreService.js';
 import PlayerSetupCard from '../components/setup/PlayerSetupCard.jsx';
@@ -89,12 +89,19 @@ export default function SetupPage() {
     goToTournament(entry.id);
   };
 
-  const handleDeleteHistory = (id) => {
+  const handleDeleteTournament = (tToDelete) => {
     openModal({
       type: 'confirm',
-      title: '🗑️ Delete Tournament',
-      msg: 'This will permanently remove this tournament from history. This action cannot be undone.',
-      onConfirm: async () => { await deleteFromHistory(id); toast('Tournament removed from history', 'ok'); },
+      title: `🗑️ Delete "${tToDelete.name}"`,
+      msg: 'This will permanently remove this tournament. This action cannot be undone.',
+      onConfirm: async () => {
+        if (tournament?.id === tToDelete.id) {
+          await clearActiveTournament();
+          await updateAdminPresence(null, false);
+        }
+        await deleteFromHistory(tToDelete.id);
+        toast('Tournament deleted ✓', 'ok');
+      },
     });
   };
 
@@ -180,9 +187,14 @@ export default function SetupPage() {
                     &ensp;·&ensp; Started {new Date(t.createdAt).toLocaleDateString()}
                   </div>
                 </div>
-                <button className="btn btn-sm btn-primary" style={{ pointerEvents: 'none' }}>
-                  {isLive ? '👀 Spectate Live' : '▶ Open'}
-                </button>
+                <div className="history-actions">
+                  <button className="btn btn-sm btn-primary" style={{ pointerEvents: 'none' }}>
+                    {isLive ? '👀 Spectate Live' : '▶ Open'}
+                  </button>
+                  {isAdmin && (
+                    <button className="history-del" onClick={e => { e.stopPropagation(); handleDeleteTournament(t); }} title="Delete tournament">🗑️</button>
+                  )}
+                </div>
               </div>
             );
           })
@@ -291,8 +303,10 @@ export default function SetupPage() {
                     &ensp;·&ensp;{new Date(h.createdAt).toLocaleDateString()}
                   </div>
                 </div>
-                {isAdmin && !isCurrentActive && (
-                  <button className="history-del" onClick={e => { e.stopPropagation(); handleDeleteHistory(h.id); }} title="Delete tournament">🗑️</button>
+                {isAdmin && (
+                  <div className="history-actions">
+                    <button className="history-del" onClick={e => { e.stopPropagation(); handleDeleteTournament(h); }} title="Delete tournament">🗑️</button>
+                  </div>
                 )}
               </div>
             );

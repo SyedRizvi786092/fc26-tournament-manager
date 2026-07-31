@@ -27,7 +27,7 @@ export default function MainPage() {
     openModal({ type: 'result', fixtureId });
   };
 
-  const handleSaveResult = async (fixtureId, homeScore, awayScore, redCards, penaltyWinner) => {
+  const handleSaveResult = async (fixtureId, homeScore, awayScore, redCards, penaltyWinner, homePenScore, awayPenScore) => {
     let t = JSON.parse(JSON.stringify(tournament));
     const fixture = t.fixtures.find(f => f.id === fixtureId);
     const isEdit  = fixture.status === 'played';
@@ -40,6 +40,8 @@ export default function MainPage() {
     fixture.awayScore     = awayScore;
     fixture.redCards      = redCards;
     fixture.penaltyWinner = penaltyWinner || null;
+    fixture.homePenScore  = (homePenScore !== undefined && homePenScore !== null) ? homePenScore : null;
+    fixture.awayPenScore  = (awayPenScore !== undefined && awayPenScore !== null) ? awayPenScore : null;
 
     if (!isEdit) {
       fixture.status = 'played';
@@ -74,6 +76,73 @@ export default function MainPage() {
     toast('Result saved ✓', 'ok');
   };
 
+  const handleResetResult = (fixtureId) => {
+    if (!isAdmin) return;
+    openModal({
+      type: 'confirm',
+      title: 'Reset Match Score?',
+      msg: 'This will reset the match status back to PENDING and clear scores and red cards for this match.',
+      onConfirm: async () => {
+        let t = JSON.parse(JSON.stringify(tournament));
+        const fixture = t.fixtures.find(f => f.id === fixtureId);
+        if (!fixture || fixture.status !== 'played') return;
+
+        fixture.status = 'pending';
+        fixture.homeScore = null;
+        fixture.awayScore = null;
+        fixture.redCards = [];
+        fixture.penaltyWinner = null;
+        fixture.homePenScore = null;
+        fixture.awayPenScore = null;
+
+        t.suspensions = t.suspensions.filter(s => s.givenInFixtureId !== fixtureId);
+        t.suspensions = t.suspensions.map(s =>
+          s.servesInFixtureId === fixtureId ? { ...s, served: false } : s
+        );
+
+        if (fixture.phase === 'league') {
+          const hasPlayoffFixtures = t.fixtures.some(f => f.phase !== 'league');
+          if (hasPlayoffFixtures) {
+            const playoffIds = t.fixtures.filter(f => f.phase !== 'league').map(f => f.id);
+            t.suspensions = t.suspensions.filter(s => !playoffIds.includes(s.givenInFixtureId));
+            t.suspensions = t.suspensions.map(s =>
+              playoffIds.includes(s.servesInFixtureId) ? { ...s, served: false } : s
+            );
+            t.fixtures = t.fixtures.filter(f => f.phase === 'league');
+          }
+          t.status = 'league';
+          t.champion = null;
+        } else if (fixture.phase === 'eliminator') {
+          const fin = t.fixtures.find(f => f.phase === 'final');
+          if (fin) {
+            t.suspensions = t.suspensions.filter(s => s.givenInFixtureId !== fin.id);
+            t.suspensions = t.suspensions.map(s =>
+              s.servesInFixtureId === fin.id ? { ...s, served: false } : s
+            );
+            fin.status = 'locked';
+            fin.awayId = null;
+            fin.homeScore = null;
+            fin.awayScore = null;
+            fin.redCards = [];
+            fin.penaltyWinner = null;
+            fin.homePenScore = null;
+            fin.awayPenScore = null;
+          }
+          t.status = 'playoffs';
+          t.champion = null;
+        } else if (fixture.phase === 'final') {
+          t.status = 'playoffs';
+          t.champion = null;
+        }
+
+        t.suspensions = resolvePendingSuspensions(t.suspensions, t.fixtures);
+
+        await saveTournament(t);
+        toast('Match reset to pending 🔄', 'ok');
+      }
+    });
+  };
+
   // Map of view id -> component
   const content = {
     result:      <ResultTab      tournament={tournament} />,
@@ -89,7 +158,7 @@ export default function MainPage() {
       <AppFooter />
 
       {modal?.type === 'result' && (
-        <ResultModal modal={modal} tournament={tournament} onClose={closeModal} onSave={handleSaveResult} />
+        <ResultModal modal={modal} tournament={tournament} onClose={closeModal} onSave={handleSaveResult} onReset={handleResetResult} />
       )}
       {modal?.type === 'confirm' && (
         <ConfirmModal modal={modal} onClose={closeModal} />

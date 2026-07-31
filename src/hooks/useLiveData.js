@@ -7,6 +7,7 @@ import {
   subscribeToSettings,
 } from '../services/firestoreService.js';
 import { migrateProfileShape } from '../logic/migrateProfile.js';
+import { patchHistoryPenaltyScores } from '../logic/patchHistory.js';
 
 /**
  * Sets up all Firestore real-time listeners.
@@ -44,6 +45,7 @@ export function useLiveData() {
     const unsubH = subscribeToHistory(h => {
       setHistory(h);
       setDataReady(true);
+      patchHistoryPenaltyScores(h);
     });
 
     // Apply migration so all profile consumers always get the new multi-team shape
