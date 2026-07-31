@@ -159,9 +159,6 @@ export default function FixturesList({ tournament, isHistory = false, onOpen }) 
                 />
               )}
             </div>
-            <p style={{ fontSize: 12, color: 'var(--t3)', textAlign: 'center', marginTop: 12, fontStyle: 'italic' }}>
-              Matches will be determined when league phase ends
-            </p>
           </>
         )}
       </div>

@@ -3,7 +3,7 @@ import Modal from './Modal.jsx';
 import { useToast } from '../../contexts/ToastContext.jsx';
 import { uid } from '../../logic/uid.js';
 
-export default function ResultModal({ modal, tournament, onClose, onSave }) {
+export default function ResultModal({ modal, tournament, onClose, onSave, onReset }) {
   const toast = useToast();
   const fixture = tournament.fixtures.find(f => f.id === modal.fixtureId);
   const home    = tournament.players.find(p => p.id === fixture?.homeId);
@@ -197,6 +197,18 @@ export default function ResultModal({ modal, tournament, onClose, onSave }) {
       </div>
 
       <div className="modal-foot">
+        {fixture.status === 'played' && onReset && (
+          <button
+            className="btn btn-danger"
+            onClick={() => {
+              onReset(fixture.id);
+              onClose();
+            }}
+            style={{ marginRight: 'auto' }}
+          >
+            🔄 Reset Score
+          </button>
+        )}
         <button className="btn btn-secondary" onClick={onClose}>Cancel</button>
         <button className="btn btn-primary" onClick={handleSave}>💾 Save Result</button>
       </div>

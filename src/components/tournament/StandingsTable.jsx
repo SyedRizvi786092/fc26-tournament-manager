@@ -35,6 +35,7 @@ export default function StandingsTable({ tournament, isHistory = false }) {
 
     return (
       <tr key={s.id} className={rowCls}>
+        {showQual && <td className="qual-status">{qualBadge}</td>}
         <td className="st-pos">{i + 1}</td>
         <td>
           <div className="st-team">
@@ -46,28 +47,17 @@ export default function StandingsTable({ tournament, isHistory = false }) {
         <td>{s.GF}</td><td>{s.GA}</td>
         <td className={gdCls}>{gd}</td>
         <td className="st-pts">{s.Pts}</td>
-        {showQual && <td className="qual-status">{qualBadge}</td>}
       </tr>
     );
   });
 
-  // Position-based legend (what each row color means)
-  const posLegend = n === 5 ? (
-    <>
-      <div className="leg-item"><div className="leg-dot" style={{ background: 'var(--green)' }} />Direct to Final (1st)</div>
-      <div className="leg-item"><div className="leg-dot" style={{ background: 'var(--blue)' }} />Eliminator (2nd–3rd)</div>
-    </>
-  ) : (
-    <div className="leg-item"><div className="leg-dot" style={{ background: 'var(--green)' }} />Qualify for Final (Top 2)</div>
-  );
-
   // Qualification status legend (only during league phase with matches played)
   const qualLegend = showQual && played > 0 ? (
-    <>
+    <div className="qual-legend">
       <div className="leg-item">🟢 Qualified for {n === 5 ? 'Playoffs' : 'Final'}</div>
       <div className="leg-item">🟡 Still in Contention</div>
       <div className="leg-item">🔴 Eliminated</div>
-    </>
+    </div>
   ) : null;
 
   return (
@@ -76,20 +66,22 @@ export default function StandingsTable({ tournament, isHistory = false }) {
         <table className="standings-table">
           <thead>
             <tr>
+              {showQual && <th className="qual-status" title="Qualification Status" />}
               <th /><th style={{ textAlign: 'left', paddingLeft: 13 }}>Player / Club</th>
               <th title="Played">P</th><th title="Won">W</th><th title="Drawn">D</th><th title="Lost">L</th>
               <th title="Goals For">GF</th><th title="Goals Against">GA</th>
               <th title="Goal Difference">GD</th><th title="Points">Pts</th>
-              {showQual && <th className="qual-status" title="Qualification Status"></th>}
             </tr>
           </thead>
           <tbody>{rows}</tbody>
         </table>
       </div>
-      <div className="qual-legend">
-        {posLegend}
-        {qualLegend}
-      </div>
+      {qualLegend}
+      <p style={{ fontSize: 12, color: 'var(--t3)', textAlign: 'center', marginTop: 12 }}>
+        {n === 5
+          ? 'Top team directly qualifies for the Final, 2nd and 3rd plays the Eliminator'
+          : 'Top 2 qualifes for the Final'}
+      </p>
     </>
   );
 }
