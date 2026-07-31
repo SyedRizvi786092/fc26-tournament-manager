@@ -58,10 +58,22 @@ export default function FixturesList({ tournament, isHistory = false, onOpen }) 
     return getQualificationStatus(tournament);
   }, [tournament, inLeague, isHistory]);
 
-  // Resolve locked position teams for the preview cards
+  // Resolve team for a given playoff slot (1-indexed).
+  // Resolution hierarchy:
+  //   1. lockedPositions[pos] — exact position is mathematically certain
+  //   2. qualifiedInOrder[pos-1] — all qualifying spots are green-badged;
+  //      ordering is best-estimate by current standings (not exact, but
+  //      the card is labelled "Preview" so this is acceptable)
+  //   3. null → render TBD
   const lockedTeam = (pos) => {
-    if (!qual || !qual.lockedPositions[pos]) return null;
-    return tournament.players.find(p => p.id === qual.lockedPositions[pos]) || null;
+    if (!qual) return null;
+    const lockedId = qual.lockedPositions[pos];
+    if (lockedId) return tournament.players.find(p => p.id === lockedId) || null;
+    if (qual.qualifiedInOrder.length > 0) {
+      const id = qual.qualifiedInOrder[pos - 1];
+      if (id) return tournament.players.find(p => p.id === id) || null;
+    }
+    return null;
   };
 
   return (

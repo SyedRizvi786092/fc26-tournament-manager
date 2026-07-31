@@ -64,7 +64,7 @@ export function getQualificationStatus(tournament) {
   const remaining      = leagueFixtures.filter(f => f.status !== 'played');
 
   /* ── Initialise result ────────────────────────────────────────────── */
-  const result = { status: {}, lockedPositions: {} };
+  const result = { status: {}, lockedPositions: {}, qualifiedInOrder: [] };
   teamIds.forEach(id => { result.status[id] = 'alive'; });
   for (let i = 1; i <= n; i++) result.lockedPositions[i] = null;
 
@@ -100,6 +100,7 @@ export function getQualificationStatus(tournament) {
       result.status[id] = i < qualifyCount ? 'qualified' : 'eliminated';
       result.lockedPositions[i + 1] = id;
     });
+    result.qualifiedInOrder = ranked.slice(0, qualifyCount);
     return result;
   }
 
@@ -295,6 +296,22 @@ export function getQualificationStatus(tournament) {
       if (t.minPos === t.maxPos && t.minPos >= 1 && t.minPos <= n) {
         result.lockedPositions[t.minPos] = id;
       }
+    });
+  }
+
+  /* ── Qualified teams in current standings order ───────────────────── */
+  // Sort ALL qualified teams by their actual (played-match) stats to give
+  // the best-estimate slot ordering for the playoff preview. This does NOT
+  // claim their exact final position is known — it is just the current
+  // standings order among qualified teams, used for the preview display.
+  const qualifiedIds = teamIds.filter(id => result.status[id] === 'qualified');
+  if (qualifiedIds.length === qualifyCount) {
+    result.qualifiedInOrder = qualifiedIds.sort((aId, bId) => {
+      const a = stats[aId], b = stats[bId];
+      if (b.Pts !== a.Pts) return b.Pts - a.Pts;
+      if (b.GD  !== a.GD)  return b.GD  - a.GD;
+      if (b.GF  !== a.GF)  return b.GF  - a.GF;
+      return h2hPts(bId, aId, played) - h2hPts(aId, bId, played);
     });
   }
 
