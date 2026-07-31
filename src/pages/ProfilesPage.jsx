@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import useStore from '../store/useStore.js';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { useToast } from '../contexts/ToastContext.jsx';
@@ -48,7 +49,7 @@ export default function ProfilesPage() {
   return (
     <div className="profiles-page">
       <div className="profiles-hdr">
-        <button className="btn btn-sm btn-secondary" onClick={goToHub}>← Home</button>
+        <Link to="/" className="btn btn-sm btn-secondary">← Home</Link>
         <span className="profiles-hdr-title">Teams &amp; Settings</span>
       </div>
 
