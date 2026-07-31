@@ -77,10 +77,10 @@ export default function StandingsTable({ tournament, isHistory = false }) {
         </table>
       </div>
       {qualLegend}
-      <p style={{ fontSize: 12, color: 'var(--t3)', textAlign: 'center', marginTop: 12 }}>
+      <p style={{ fontSize: 12, color: 'var(--t3)', textAlign: 'left', marginTop: 12 }}>
         {n === 5
           ? 'Top team directly qualifies for the Final, 2nd and 3rd plays the Eliminator'
-          : 'Top 2 qualifes for the Final'}
+          : 'Top 2 qualifies for the Final'}
       </p>
     </>
   );

@@ -200,10 +200,7 @@ export default function ResultModal({ modal, tournament, onClose, onSave, onRese
         {fixture.status === 'played' && onReset && (
           <button
             className="btn btn-danger"
-            onClick={() => {
-              onReset(fixture.id);
-              onClose();
-            }}
+            onClick={() => onReset(fixture.id)}
             style={{ marginRight: 'auto' }}
           >
             🔄 Reset Score
