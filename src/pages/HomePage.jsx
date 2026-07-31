@@ -178,7 +178,7 @@ export default function HomePage() {
             );
           })
         ) : (
-          <EmptyState icon="⏳" title="No Tournament In Progress" message="Create a new tournament below to get started!" />
+          <EmptyState icon="⏳" title="No Tournament In Progress" message={isAdmin ? "Create a new tournament below to get started!" : "Ask the admin to create a new tournament!"} />
         )}
       </div>
 
