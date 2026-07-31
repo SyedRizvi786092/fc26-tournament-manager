@@ -64,7 +64,7 @@ export function getQualificationStatus(tournament) {
   const remaining      = leagueFixtures.filter(f => f.status !== 'played');
 
   /* ── Initialise result ────────────────────────────────────────────── */
-  const result = { status: {}, lockedPositions: {}, qualifiedInOrder: [] };
+  const result = { status: {}, lockedPositions: {}, canBeFirst: {} };
   teamIds.forEach(id => { result.status[id] = 'alive'; });
   for (let i = 1; i <= n; i++) result.lockedPositions[i] = null;
 
@@ -100,7 +100,10 @@ export function getQualificationStatus(tournament) {
       result.status[id] = i < qualifyCount ? 'qualified' : 'eliminated';
       result.lockedPositions[i + 1] = id;
     });
-    result.qualifiedInOrder = ranked.slice(0, qualifyCount);
+    ranked.slice(0, qualifyCount).forEach(id => { result.canBeFirst[id] = true; });
+    // When all matches played, 1st is locked → only that one canBeFirst
+    if (ranked.length > 0) result.canBeFirst[ranked[0]] = true;
+    ranked.slice(1, qualifyCount).forEach(id => { result.canBeFirst[id] = false; });
     return result;
   }
 
@@ -299,21 +302,19 @@ export function getQualificationStatus(tournament) {
     });
   }
 
-  /* ── Qualified teams in current standings order ───────────────────── */
-  // Sort ALL qualified teams by their actual (played-match) stats to give
-  // the best-estimate slot ordering for the playoff preview. This does NOT
-  // claim their exact final position is known — it is just the current
-  // standings order among qualified teams, used for the preview display.
+  /* ── canBeFirst: can this qualified team finish 1st? ──────────────── */
+  // Used by the 5-team preview to decide Final vs Eliminator slot.
+  //
+  // When DFS completed (!earlyExit), tracker.minPos is exact:
+  //   minPos === 1  →  the team CAN finish 1st in some scenario
+  //   minPos >= 2   →  the team can NEVER finish 1st
+  //
+  // When DFS terminated early or didn't run, we conservatively say true
+  // (can't prove they can't be 1st).
   const qualifiedIds = teamIds.filter(id => result.status[id] === 'qualified');
-  if (qualifiedIds.length === qualifyCount) {
-    result.qualifiedInOrder = qualifiedIds.sort((aId, bId) => {
-      const a = stats[aId], b = stats[bId];
-      if (b.Pts !== a.Pts) return b.Pts - a.Pts;
-      if (b.GD  !== a.GD)  return b.GD  - a.GD;
-      if (b.GF  !== a.GF)  return b.GF  - a.GF;
-      return h2hPts(bId, aId, played) - h2hPts(aId, bId, played);
-    });
-  }
+  qualifiedIds.forEach(id => {
+    result.canBeFirst[id] = earlyExit || tracker[id].minPos === 1;
+  });
 
   return result;
 }

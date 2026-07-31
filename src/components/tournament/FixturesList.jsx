@@ -58,23 +58,29 @@ export default function FixturesList({ tournament, isHistory = false, onOpen }) 
     return getQualificationStatus(tournament);
   }, [tournament, inLeague, isHistory]);
 
-  // Resolve team for a given playoff slot (1-indexed).
-  // Resolution hierarchy:
-  //   1. lockedPositions[pos] — exact position is mathematically certain
-  //   2. qualifiedInOrder[pos-1] — all qualifying spots are green-badged;
-  //      ordering is best-estimate by current standings (not exact, but
-  //      the card is labelled "Preview" so this is acceptable)
-  //   3. null → render TBD
-  const lockedTeam = (pos) => {
-    if (!qual) return null;
-    const lockedId = qual.lockedPositions[pos];
-    if (lockedId) return tournament.players.find(p => p.id === lockedId) || null;
-    if (qual.qualifiedInOrder.length > 0) {
-      const id = qual.qualifiedInOrder[pos - 1];
-      if (id) return tournament.players.find(p => p.id === id) || null;
-    }
-    return null;
-  };
+  // ── Resolve preview slot teams from qualification data ──────────────
+  //
+  // 3-4 team tournaments (Final only):
+  //   Any qualified team fills a slot immediately (position irrelevant).
+  //
+  // 5-team tournaments (Eliminator + Final):
+  //   Final home:     only if a team is locked to position 1
+  //   Eliminator:     qualified teams guaranteed NOT to finish 1st
+  //   Otherwise:      TBD (qualified but could still be 1st)
+  const findPlayer = (id) => tournament.players.find(p => p.id === id) || null;
+
+  // All currently qualified teams (green badge)
+  const qualifiedPlayers = qual
+    ? tournament.players.filter(p => qual.status[p.id] === 'qualified')
+    : [];
+
+  // 5-team specific: team locked to 1st, and eliminator-bound teams
+  const finalTeam5 = qual && qual.lockedPositions[1]
+    ? findPlayer(qual.lockedPositions[1])
+    : null;
+  const elimTeams5 = qual
+    ? qualifiedPlayers.filter(p => qual.canBeFirst[p.id] === false)
+    : [];
 
   return (
     <>
@@ -130,8 +136,8 @@ export default function FixturesList({ tournament, isHistory = false, onOpen }) 
               <div style={{ marginBottom: 20 }}>
                 <div className="bracket-round-title">🔥 Eliminator</div>
                 <PreviewCard
-                  home={lockedTeam(2)}
-                  away={lockedTeam(3)}
+                  home={elimTeams5[0] || null}
+                  away={elimTeams5[1] || null}
                   variant="elim"
                 />
               </div>
@@ -140,15 +146,15 @@ export default function FixturesList({ tournament, isHistory = false, onOpen }) 
               <div className="bracket-round-title">⭐ Grand Final</div>
               {n === 5 ? (
                 <PreviewCard
-                  home={lockedTeam(1)}
+                  home={finalTeam5}
                   away={null}
                   awayLabel="Winner of Eliminator"
                   variant="final"
                 />
               ) : (
                 <PreviewCard
-                  home={lockedTeam(1)}
-                  away={lockedTeam(2)}
+                  home={qualifiedPlayers[0] || null}
+                  away={qualifiedPlayers[1] || null}
                   variant="final"
                 />
               )}
