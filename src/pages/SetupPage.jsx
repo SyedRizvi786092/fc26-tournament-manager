@@ -187,12 +187,14 @@ export default function SetupPage() {
                     &ensp;·&ensp; Started {new Date(t.createdAt).toLocaleDateString()}
                   </div>
                 </div>
-                <button className="btn btn-sm btn-primary" style={{ pointerEvents: 'none' }}>
-                  {isLive ? '👀 Spectate Live' : '▶ Open'}
-                </button>
-                {isAdmin && (
-                  <button className="history-del" style={{ marginLeft: 8 }} onClick={e => { e.stopPropagation(); handleDeleteTournament(t); }} title="Delete tournament">🗑️</button>
-                )}
+                <div className="history-actions">
+                  <button className="btn btn-sm btn-primary" style={{ pointerEvents: 'none' }}>
+                    {isLive ? '👀 Spectate Live' : '▶ Open'}
+                  </button>
+                  {isAdmin && (
+                    <button className="history-del" onClick={e => { e.stopPropagation(); handleDeleteTournament(t); }} title="Delete tournament">🗑️</button>
+                  )}
+                </div>
               </div>
             );
           })
@@ -302,7 +304,9 @@ export default function SetupPage() {
                   </div>
                 </div>
                 {isAdmin && (
-                  <button className="history-del" style={{ marginLeft: 8 }} onClick={e => { e.stopPropagation(); handleDeleteTournament(h); }} title="Delete tournament">🗑️</button>
+                  <div className="history-actions">
+                    <button className="history-del" onClick={e => { e.stopPropagation(); handleDeleteTournament(h); }} title="Delete tournament">🗑️</button>
+                  </div>
                 )}
               </div>
             );
