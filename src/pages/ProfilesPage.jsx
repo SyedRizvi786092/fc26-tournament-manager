@@ -4,14 +4,14 @@ import useStore from '../store/useStore.js';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { useToast } from '../contexts/ToastContext.jsx';
 import { saveProfile, deleteProfile, saveUserSettings } from '../services/firestoreService.js';
-import { THEME_PRESETS } from '../logic/theme.js';
+import { THEME_PRESETS, applyThemeAccent } from '../logic/theme.js';
 import EditProfileModal from '../components/modals/EditProfileModal.jsx';
 import TradeModal from '../components/modals/TradeModal.jsx';
 import ConfirmModal from '../components/modals/ConfirmModal.jsx';
 import EmptyState from '../components/ui/EmptyState.jsx';
 
 export default function ProfilesPage() {
-  const { profiles, themeAccent, modal, openModal, closeModal } = useStore();
+  const { profiles, themeAccent, setThemeAccent, modal, openModal, closeModal } = useStore();
   const { isAdmin, signOut, currentUser } = useAuth();
   const toast = useToast();
 
@@ -43,6 +43,12 @@ export default function ProfilesPage() {
 
   const handleThemeChange = async (preset) => {
     if (!currentUser) return;
+    // 1. Instant local state + CSS variable update
+    setThemeAccent(preset.hex);
+    applyThemeAccent(preset.hex);
+    localStorage.setItem(`fc26_theme_${currentUser.uid}`, preset.hex);
+
+    // 2. Persist to Firestore cloud for this user
     await saveUserSettings(currentUser.uid, { themeAccent: preset.hex });
     toast(`Theme accent updated to ${preset.name} ✓`, 'ok');
   };

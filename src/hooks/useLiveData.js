@@ -26,10 +26,21 @@ export function useLiveData() {
   // Per-user theme preference listener (persisted in Firestore under users/{uid})
   useEffect(() => {
     if (!currentUser) return;
+
+    // Load initial local preference instantly
+    const localAccent = localStorage.getItem(`fc26_theme_${currentUser.uid}`);
+    if (localAccent) {
+      setThemeAccent(localAccent);
+      applyThemeAccent(localAccent);
+    }
+
     const unsubUser = subscribeToUserSettings(currentUser.uid, (userSettings) => {
-      const accent = userSettings?.themeAccent || '#00c896';
-      setThemeAccent(accent);
-      applyThemeAccent(accent);
+      if (userSettings?.themeAccent) {
+        const accent = userSettings.themeAccent;
+        setThemeAccent(accent);
+        applyThemeAccent(accent);
+        localStorage.setItem(`fc26_theme_${currentUser.uid}`, accent);
+      }
     });
     return () => unsubUser();
   }, [currentUser, setThemeAccent]);
