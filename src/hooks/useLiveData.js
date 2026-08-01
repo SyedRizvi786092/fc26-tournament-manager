@@ -8,13 +8,14 @@ import {
 } from '../services/firestoreService.js';
 import { migrateProfileShape } from '../logic/migrateProfile.js';
 import { patchHistoryPenaltyScores } from '../logic/patchHistory.js';
+import { applyThemeAccent } from '../logic/theme.js';
 
 /**
  * Sets up all Firestore real-time listeners.
  * Called once at the app root after auth is confirmed.
  */
 export function useLiveData() {
-  const { setTournament, setHistory, setProfiles, setAdminPresence, setDataReady } = useStore();
+  const { setTournament, setHistory, setProfiles, setAdminPresence, setThemeAccent, setDataReady } = useStore();
 
   // Track previous tournament status to detect status transitions
   const prevTournamentRef = useRef(null);
@@ -55,8 +56,11 @@ export function useLiveData() {
 
     const unsubS = subscribeToSettings(settings => {
       setAdminPresence(settings?.adminPresence || null);
+      const accent = settings?.themeAccent || '#00c896';
+      setThemeAccent(accent);
+      applyThemeAccent(accent);
     });
 
     return () => { unsubT(); unsubH(); unsubP(); unsubS(); };
-  }, [setTournament, setHistory, setProfiles, setAdminPresence]);
+  }, [setTournament, setHistory, setProfiles, setAdminPresence, setThemeAccent, setDataReady]);
 }

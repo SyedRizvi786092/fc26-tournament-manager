@@ -1,18 +1,22 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import useStore from '../store/useStore.js';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { useToast } from '../contexts/ToastContext.jsx';
-import { saveProfile, deleteProfile } from '../services/firestoreService.js';
+import { saveProfile, deleteProfile, saveSettings } from '../services/firestoreService.js';
+import { THEME_PRESETS } from '../logic/theme.js';
 import EditProfileModal from '../components/modals/EditProfileModal.jsx';
+import TradeModal from '../components/modals/TradeModal.jsx';
 import ConfirmModal from '../components/modals/ConfirmModal.jsx';
 import EmptyState from '../components/ui/EmptyState.jsx';
-import { useState } from 'react';
 
 export default function ProfilesPage() {
-  const { profiles, goToHub, modal, openModal, closeModal } = useStore();
+  const { profiles, themeAccent, modal, openModal, closeModal } = useStore();
   const { isAdmin, signOut, currentUser } = useAuth();
   const toast = useToast();
+
   const [editModal, setEditModal] = useState(null);
+  const [showTradeModal, setShowTradeModal] = useState(false);
 
   const handleSaveProfile = async (profile) => {
     await saveProfile(profile);
@@ -27,6 +31,21 @@ export default function ProfilesPage() {
       msg: 'This will permanently remove this team profile. Existing tournament history is not affected.',
       onConfirm: async () => { await deleteProfile(id); toast('Team profile deleted', 'ok'); },
     });
+  };
+
+  const handleExecuteTrade = async (profA, profB, playerA, playerB) => {
+    await saveProfile(profA);
+    await saveProfile(profB);
+    toast(`Traded "${playerA}" ⇄ "${playerB}" successfully! ✓`, 'ok');
+  };
+
+  const handleThemeChange = async (preset) => {
+    if (!isAdmin) {
+      toast('Only admin can update app theme accent', 'err');
+      return;
+    }
+    await saveSettings({ themeAccent: preset.hex });
+    toast(`Theme accent updated to ${preset.name} ✓`, 'ok');
   };
 
   const handleSignOut = () => {
@@ -68,19 +87,59 @@ export default function ProfilesPage() {
           </div>
         </div>
 
+        {/* 🎨 UI Theme Accent Switcher */}
+        <div className="setup-card">
+          <div className="setup-card-title">🎨 App Theme Accent</div>
+          <p style={{ fontSize: 13, color: 'var(--t2)', marginBottom: 14 }}>
+            Select a custom primary accent color. Persisted to Firebase for all users across the app.
+          </p>
+
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+            {THEME_PRESETS.map(preset => {
+              const isActive = (themeAccent || '#00c896').toLowerCase() === preset.hex.toLowerCase();
+              return (
+                <button
+                  key={preset.id}
+                  type="button"
+                  className={`btn btn-sm ${isActive ? 'btn-primary' : 'btn-secondary'}`}
+                  style={{ gap: 8, padding: '8px 14px', fontSize: 13 }}
+                  onClick={() => handleThemeChange(preset)}
+                >
+                  <span style={{ width: 14, height: 14, borderRadius: '50%', background: preset.hex, display: 'inline-block', border: '1px solid rgba(255,255,255,.3)' }} />
+                  {preset.name} {isActive ? '✓' : ''}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
         {/* Saved Teams */}
         <div className="setup-card">
-          <div className="setup-card-title" style={{ justifyContent: 'space-between' }}>
-            👥 Saved Profiles ({profiles.length})
+          <div className="setup-card-title" style={{ justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
+            <span>👥 Saved Profiles ({profiles.length})</span>
             {isAdmin && (
-              <button className="btn btn-sm btn-primary"
-                onClick={() => openProfileModal(null)}
-                style={{ textTransform: 'none', letterSpacing: 0, fontSize: 13 }}>+ New Profile</button>
+              <div style={{ display: 'flex', gap: 8, marginLeft: 'auto' }}>
+                <button
+                  className="btn btn-sm btn-secondary"
+                  onClick={() => setShowTradeModal(true)}
+                  disabled={profiles.length < 2}
+                  style={{ textTransform: 'none', letterSpacing: 0, fontSize: 13 }}
+                >
+                  🔄 Trade Players
+                </button>
+                <button
+                  className="btn btn-sm btn-primary"
+                  onClick={() => openProfileModal(null)}
+                  style={{ textTransform: 'none', letterSpacing: 0, fontSize: 13 }}
+                >
+                  + New Profile
+                </button>
+              </div>
             )}
           </div>
+
           {profiles.length ? profiles.map(p => {
             const teamCount  = (p.teams || []).length;
-            const squadTotal = (p.teams || []).reduce((acc, t) => acc + (t.squad?.length || 0), 0);
             const clubLabel  = teamCount === 0 ? 'No teams'
                              : teamCount === 1 ? p.teams[0].clubName
                              : `${teamCount} teams`;
@@ -121,6 +180,13 @@ export default function ProfilesPage() {
           readOnly={!isAdmin}
           onClose={() => setEditModal(null)}
           onSave={handleSaveProfile}
+        />
+      )}
+      {showTradeModal && (
+        <TradeModal
+          profiles={profiles}
+          onClose={() => setShowTradeModal(false)}
+          onTrade={handleExecuteTrade}
         />
       )}
       {modal?.type === 'confirm' && <ConfirmModal modal={modal} onClose={closeModal} />}

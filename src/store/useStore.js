@@ -12,6 +12,7 @@ const useStore = create((set, get) => ({
   history:       [],    // history collection
   profiles:      [],    // profiles collection
   adminPresence: null,  // { activeTournamentId, isEditing } from config/settings
+  themeAccent:   '#00c896', // accent color hex from config/settings
   dataReady:     false, // true once tournament + history listeners have each fired once
 
   // ─── Modal ───────────────────────────────────────────────────────────────
@@ -30,7 +31,6 @@ const useStore = create((set, get) => ({
   goToTournament: (id)  => set({ activeView: 'tournament', selectedTournamentId: id, view: 'standings' }),
   goToProfiles:   ()    => set({ activeView: 'profiles' }),
   goToStats:      ()    => set({ activeView: 'stats' }),
-  // Default historyTab to 'result' so completed tournaments land on Result tab
   viewHistory:    (id, defaultTab = 'result') => set({ activeView: 'historyDetails', selectedTournamentId: id, historyTab: defaultTab }),
 
   setView:        (view) => set({ view }),
@@ -41,6 +41,7 @@ const useStore = create((set, get) => ({
   setHistory:       (h) => set({ history: h }),
   setProfiles:      (p) => set({ profiles: p }),
   setAdminPresence: (p) => set({ adminPresence: p }),
+  setThemeAccent:   (c) => set({ themeAccent: c }),
   setDataReady:     (v) => set({ dataReady: v }),
 
   // ─── Actions: Modal ──────────────────────────────────────────────────────
