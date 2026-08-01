@@ -41,6 +41,8 @@ function getAllPlayedMatches(history = [], tournament = null) {
         id: `manual_${t.id}`,
         tournamentName: t.name,
         date: t.createdAt,
+        homeId: t.final.homeId,
+        awayId: t.final.awayId,
         homeName,
         awayName,
         homeScore: t.final.homeScore ?? 0,
@@ -48,6 +50,7 @@ function getAllPlayedMatches(history = [], tournament = null) {
         penaltyWinnerName: t.final.penaltyWinner ? playerMap[t.final.penaltyWinner] : null,
         homePenScore: t.final.homePenScore,
         awayPenScore: t.final.awayPenScore,
+        matchday: null,
         phase: 'final',
         redCards: [],
       });
@@ -64,6 +67,8 @@ function getAllPlayedMatches(history = [], tournament = null) {
         id: f.id,
         tournamentName: t.name,
         date: t.createdAt,
+        homeId: f.homeId,
+        awayId: f.awayId,
         homeName,
         awayName,
         homeScore: f.homeScore ?? 0,
@@ -71,6 +76,7 @@ function getAllPlayedMatches(history = [], tournament = null) {
         penaltyWinnerName: f.penaltyWinner ? playerMap[f.penaltyWinner] : null,
         homePenScore: f.homePenScore,
         awayPenScore: f.awayPenScore,
+        matchday: f.matchday,
         phase: f.phase,
         redCards: f.redCards || [],
       });
@@ -141,7 +147,7 @@ export function getPerformanceStats(history = [], tournament = null) {
       draws: 0,
       losses: 0,
       winRate: 0,
-      matchLog: [], // { date, result: 'W'|'D'|'L' }
+      matchLog: [],
     };
   });
 
@@ -182,14 +188,9 @@ export function getPerformanceStats(history = [], tournament = null) {
 
   const list = Object.values(data).map(m => {
     m.winRate = m.played > 0 ? (m.wins / m.played) * 100 : 0;
-
-    // Sort log chronologically to calculate streaks and recent form
     m.matchLog.sort((a, b) => new Date(a.date) - new Date(b.date));
-
-    // Last 5 form
     m.form = m.matchLog.slice(-5).map(l => l.result);
 
-    // All-time longest win streak
     let maxStreak = 0, currStreak = 0;
     m.matchLog.forEach(l => {
       if (l.result === 'W') {
@@ -258,14 +259,19 @@ export function getGoalStats(history = [], tournament = null) {
     return m;
   });
 
-  // Clean Sheets leaderboard
   const cleanSheets = [...goalMachine].sort((a, b) => {
     if (b.cleanSheetPct !== a.cleanSheetPct) return b.cleanSheetPct - a.cleanSheetPct;
     if (b.cleanSheets !== a.cleanSheets) return b.cleanSheets - a.cleanSheets;
     return a.played - b.played;
   });
 
-  // Largest Margin Wins (Top 5)
+  // Helper for match label (Matchday / Eliminator / Final)
+  const formatMatchLabel = (m) => {
+    if (m.phase === 'final') return '⭐ Grand Final';
+    if (m.phase === 'eliminator') return '🔥 Eliminator';
+    return `Matchday ${m.matchday}`;
+  };
+
   const largestMargin = [...matches]
     .filter(m => m.homeScore !== m.awayScore)
     .map(m => {
@@ -275,14 +281,13 @@ export function getGoalStats(history = [], tournament = null) {
       const wScore = isHomeWin ? m.homeScore : m.awayScore;
       const lScore = isHomeWin ? m.awayScore : m.homeScore;
       const margin = wScore - lScore;
-      return { ...m, winner, loser, wScore, lScore, margin };
+      return { ...m, winner, loser, wScore, lScore, margin, matchLabel: formatMatchLabel(m) };
     })
     .sort((a, b) => b.margin - a.margin || (b.wScore + b.lScore) - (a.wScore + a.lScore))
     .slice(0, 5);
 
-  // Highest Scoring Single Fixtures (Top 5)
   const highestScoring = [...matches]
-    .map(m => ({ ...m, totalGoals: m.homeScore + m.awayScore }))
+    .map(m => ({ ...m, totalGoals: m.homeScore + m.awayScore, matchLabel: formatMatchLabel(m) }))
     .sort((a, b) => b.totalGoals - a.totalGoals)
     .slice(0, 5);
 
@@ -350,7 +355,6 @@ export function getH2HStats(managerA, managerB, history = [], tournament = null)
   return h2h;
 }
 
-// Find pair of managers with most direct playoff/final encounters
 export function getFiercestRivalry(history = [], tournament = null) {
   const matches = getAllPlayedMatches(history, tournament);
   const pairings = {};
@@ -396,7 +400,6 @@ export function getClutchStats(history = [], tournament = null) {
     };
   });
 
-  // Trophies & Finals count
   const processCompleted = (h) => {
     if (!h || h.status !== 'complete') return;
     const playerMap = {};
@@ -432,7 +435,6 @@ export function getClutchStats(history = [], tournament = null) {
   (history || []).forEach(h => processCompleted(h));
   if (tournament && tournament.status === 'complete') processCompleted(tournament);
 
-  // Shootout records
   matches.forEach(m => {
     if (!m.penaltyWinnerName) return;
     const hKey = norm(m.homeName);
@@ -487,9 +489,17 @@ export function getDisciplineStats(history = [], tournament = null) {
     if (managerData[aKey]) managerData[aKey].played++;
 
     (m.redCards || []).forEach(rc => {
-      const teamName = norm(m.homeName) === norm(rc.teamId) ? m.homeName : m.awayName;
-      const mKey = norm(teamName);
+      // Correct team & manager resolution by matching teamId to homeId or awayId
+      let teamName = null;
+      if (rc.teamId && rc.teamId === m.homeId) teamName = m.homeName;
+      else if (rc.teamId && rc.teamId === m.awayId) teamName = m.awayName;
+      else {
+        // Fallback matching
+        const nH = norm(m.homeName), nA = norm(m.awayName), nT = norm(rc.teamId);
+        teamName = nT === nH ? m.homeName : (nT === nA ? m.awayName : m.homeName);
+      }
 
+      const mKey = norm(teamName);
       if (managerData[mKey]) {
         managerData[mKey].redCards++;
       }
