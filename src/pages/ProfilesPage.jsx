@@ -43,14 +43,21 @@ export default function ProfilesPage() {
 
   const handleThemeChange = async (preset) => {
     if (!currentUser) return;
+
     // 1. Instant local state + CSS variable update
     setThemeAccent(preset.hex);
     applyThemeAccent(preset.hex);
     localStorage.setItem(`fc26_theme_${currentUser.uid}`, preset.hex);
 
-    // 2. Persist to Firestore cloud for this user
-    await saveUserSettings(currentUser.uid, { themeAccent: preset.hex });
+    // 2. Show instant toast notification
     toast(`Theme accent updated to ${preset.name} ✓`, 'ok');
+
+    // 3. Persist to Firestore cloud for this user account
+    try {
+      await saveUserSettings(currentUser.uid, { themeAccent: preset.hex });
+    } catch (err) {
+      console.error('Failed to save user theme settings:', err);
+    }
   };
 
   const handleSignOut = () => {
