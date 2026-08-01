@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import useStore from '../store/useStore.js';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { useToast } from '../contexts/ToastContext.jsx';
-import { saveProfile, deleteProfile, saveUserSettings } from '../services/firestoreService.js';
+import { saveProfile, deleteProfile, saveUserThemeAccent } from '../services/firestoreService.js';
 import { THEME_PRESETS, applyThemeAccent } from '../logic/theme.js';
 import EditProfileModal from '../components/modals/EditProfileModal.jsx';
 import TradeModal from '../components/modals/TradeModal.jsx';
@@ -49,14 +49,14 @@ export default function ProfilesPage() {
     applyThemeAccent(preset.hex);
     localStorage.setItem(`fc26_theme_${currentUser.uid}`, preset.hex);
 
-    // 2. Show instant toast notification
+    // 2. Instant Toast feedback
     toast(`Theme accent updated to ${preset.name} ✓`, 'ok');
 
-    // 3. Persist to Firestore cloud for this user account
+    // 3. Sync to Firestore cloud under config/settings (userThemes[uid])
     try {
-      await saveUserSettings(currentUser.uid, { themeAccent: preset.hex });
+      await saveUserThemeAccent(currentUser.uid, preset.hex);
     } catch (err) {
-      console.error('Failed to save user theme settings:', err);
+      console.error('Failed to sync user theme settings to cloud:', err);
     }
   };
 

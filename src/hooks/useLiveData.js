@@ -6,7 +6,6 @@ import {
   subscribeToHistory,
   subscribeToProfiles,
   subscribeToSettings,
-  subscribeToUserSettings,
 } from '../services/firestoreService.js';
 import { migrateProfileShape } from '../logic/migrateProfile.js';
 import { patchHistoryPenaltyScores } from '../logic/patchHistory.js';
@@ -23,26 +22,14 @@ export function useLiveData() {
   // Track previous tournament status to detect status transitions
   const prevTournamentRef = useRef(null);
 
-  // Per-user theme preference listener (persisted in Firestore under users/{uid})
+  // Load initial local preference instantly on user auth
   useEffect(() => {
     if (!currentUser) return;
-
-    // Load initial local preference instantly
     const localAccent = localStorage.getItem(`fc26_theme_${currentUser.uid}`);
     if (localAccent) {
       setThemeAccent(localAccent);
       applyThemeAccent(localAccent);
     }
-
-    const unsubUser = subscribeToUserSettings(currentUser.uid, (userSettings) => {
-      if (userSettings?.themeAccent) {
-        const accent = userSettings.themeAccent;
-        setThemeAccent(accent);
-        applyThemeAccent(accent);
-        localStorage.setItem(`fc26_theme_${currentUser.uid}`, accent);
-      }
-    });
-    return () => unsubUser();
   }, [currentUser, setThemeAccent]);
 
   useEffect(() => {
@@ -78,8 +65,16 @@ export function useLiveData() {
 
     const unsubS = subscribeToSettings(settings => {
       setAdminPresence(settings?.adminPresence || null);
+
+      // Real-time sync user's personal cloud theme accent across all devices logged into this account
+      if (currentUser && settings?.userThemes?.[currentUser.uid]) {
+        const userAccent = settings.userThemes[currentUser.uid];
+        setThemeAccent(userAccent);
+        applyThemeAccent(userAccent);
+        localStorage.setItem(`fc26_theme_${currentUser.uid}`, userAccent);
+      }
     });
 
     return () => { unsubT(); unsubH(); unsubP(); unsubS(); };
-  }, [setTournament, setHistory, setProfiles, setAdminPresence, setDataReady]);
+  }, [currentUser, setTournament, setHistory, setProfiles, setAdminPresence, setThemeAccent, setDataReady]);
 }
