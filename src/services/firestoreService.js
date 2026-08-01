@@ -25,6 +25,15 @@ export const updateAdminPresence = (activeTournamentId, isEditing) =>
     }
   }, { merge: true });
 
+// ─── Per-User Cloud Theme Preferences ───────────────────────────────────────
+
+export const saveUserThemeAccent = (uid, themeAccent) =>
+  setDoc(doc(db, 'config', 'settings'), {
+    userThemes: {
+      [uid]: themeAccent,
+    }
+  }, { merge: true });
+
 // ─── Active Tournament ───────────────────────────────────────────────────
 
 export const subscribeToTournament = (callback) =>

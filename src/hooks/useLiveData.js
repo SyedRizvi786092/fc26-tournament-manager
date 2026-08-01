@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import useStore from '../store/useStore.js';
+import { useAuth } from '../contexts/AuthContext.jsx';
 import {
   subscribeToTournament,
   subscribeToHistory,
@@ -8,23 +9,34 @@ import {
 } from '../services/firestoreService.js';
 import { migrateProfileShape } from '../logic/migrateProfile.js';
 import { patchHistoryPenaltyScores } from '../logic/patchHistory.js';
+import { applyThemeAccent } from '../logic/theme.js';
 
 /**
  * Sets up all Firestore real-time listeners.
  * Called once at the app root after auth is confirmed.
  */
 export function useLiveData() {
-  const { setTournament, setHistory, setProfiles, setAdminPresence, setDataReady } = useStore();
+  const { setTournament, setHistory, setProfiles, setAdminPresence, setThemeAccent, setDataReady } = useStore();
+  const { currentUser } = useAuth();
 
   // Track previous tournament status to detect status transitions
   const prevTournamentRef = useRef(null);
+
+  // Load initial local preference instantly on user auth
+  useEffect(() => {
+    if (!currentUser) return;
+    const localAccent = localStorage.getItem(`fc26_theme_${currentUser.uid}`);
+    if (localAccent) {
+      setThemeAccent(localAccent);
+      applyThemeAccent(localAccent);
+    }
+  }, [currentUser, setThemeAccent]);
 
   useEffect(() => {
     const unsubT = subscribeToTournament((t) => {
       const prev  = prevTournamentRef.current;
       const store = useStore.getState();
 
-      // Tournament was deleted (admin finished it) — send viewers back to hub
       if (!t && prev) {
         if (store.activeView === 'tournament') store.goToHub();
         prevTournamentRef.current = null;
@@ -32,7 +44,6 @@ export function useLiveData() {
         return;
       }
 
-      // Status just became 'complete' — auto-navigate all viewers to Result tab
       if (t && prev && prev.status !== 'complete' && t.status === 'complete') {
         if (store.activeView === 'tournament') store.setView('result');
       }
@@ -48,15 +59,22 @@ export function useLiveData() {
       patchHistoryPenaltyScores(h);
     });
 
-    // Apply migration so all profile consumers always get the new multi-team shape
     const unsubP = subscribeToProfiles(profiles => {
       setProfiles(profiles.map(migrateProfileShape));
     });
 
     const unsubS = subscribeToSettings(settings => {
       setAdminPresence(settings?.adminPresence || null);
+
+      // Real-time sync user's personal cloud theme accent across all devices logged into this account
+      if (currentUser && settings?.userThemes?.[currentUser.uid]) {
+        const userAccent = settings.userThemes[currentUser.uid];
+        setThemeAccent(userAccent);
+        applyThemeAccent(userAccent);
+        localStorage.setItem(`fc26_theme_${currentUser.uid}`, userAccent);
+      }
     });
 
     return () => { unsubT(); unsubH(); unsubP(); unsubS(); };
-  }, [setTournament, setHistory, setProfiles, setAdminPresence]);
+  }, [currentUser, setTournament, setHistory, setProfiles, setAdminPresence, setThemeAccent, setDataReady]);
 }

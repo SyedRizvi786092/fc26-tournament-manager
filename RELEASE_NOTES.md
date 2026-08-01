@@ -1,51 +1,73 @@
-# 🏆 FC 26 Tournament Manager — Release Notes
+# 🚀 FC 26 Tournament Manager — Release Notes
 
-## Version Update: Playoff Qualification Engine, Penalty Scores & Mobile UI Polish
+## Version 2.0 Major Update — SPA Routing, Mathematical Qualification Engine, Analytics Hub & Squad Management
 
-This release introduces major feature enhancements, mathematical qualification calculations, UI/UX polish, and mobile layout optimizations.
-
----
-
-### 1. 🥅 Penalty Shootout Scores
-- **Manual Penalty Score Entry**: Tied playoff matches (Eliminator / Grand Final) now require and record exact penalty shootout goal counts for both teams.
-- **Fixture Display**: Penalty scores are formatted cleanly on fixture cards (e.g., `(7–6 pen)`).
-- **Historical Retrofit**: Preserved and added historical penalty shootout scores for past tournaments (Tournament 3: `7–6`, Tournament 10: `5–3`).
+This major update transforms the app into a full-fledged Single Page Application (SPA) featuring client-side routing, an automated mathematical qualification predictor, an analytics hub, squad player trading, searchable tournament history, per-user cloud theme accents, and mobile layout polish.
 
 ---
 
-### 2. 🧮 Mathematical Qualification Engine & Badges
-- **Exact Qualification Engine**: Built a DFS backtracking engine (`qualification.js`) with position-range analysis to determine team qualification status after every completed match.
-- **Goal Difference (GD) & Tie-Breaker Handling**: Correctly handles unbounded GD variance alongside Points, Goals For (GF), and Head-to-Head (H2H) rules.
-- **Standings Status Badges**: Added status badges to the leftmost column of the Standings Table:
-  - 🟢 **Qualified**: 100% mathematical guarantee for Playoffs / Final.
-  - 🟡 **Alive**: Still in contention.
-  - 🔴 **Eliminated**: Mathematically impossible to qualify.
-- **Standings Instructions**: Left-aligned instruction text below the table ("Top 2 qualifies for the Final" / "Top team directly qualifies for the Final, 2nd and 3rd plays the Eliminator").
+### 1. 🚦 Mathematical Qualification Engine & Standings Badges
+- **Real-Time Qualification Simulation**: Evaluates remaining matchday scenarios after every saved match score using depth-first position-range calculation.
+- **Standings Status Badges**: Left-aligned standings badges indicating:
+  - 🟢 **Green Badge**: Guaranteed Playoff / Final qualification.
+  - 🟡 **Yellow Badge**: Mathematically alive to qualify.
+  - 🔴 **Red Badge**: Mathematically eliminated.
+- **Dynamic Playoff Previews**: Replaces TBD in playoff matches (Eliminator / Final) with team names as soon as top/playoff positions are mathematically locked.
+- **Left-Aligned Instructions**: Clean instruction text replacing cluttered legends.
 
 ---
 
-### 3. 🔥 Always-Visible Playoffs Preview
-- **Playoffs Bracket Preview**: The Playoffs section is now always visible during the league phase using dashed preview cards.
-- **Dynamic Slot Resolution**:
-  - **3–4 Team Tournaments**: Any green-badged qualified team populates a Grand Final preview slot immediately.
-  - **5-Team Tournaments**: Grand Final home slot locks when 1st place is mathematically locked; Eliminator slots populate with qualified teams guaranteed not to finish 1st.
+### 2. 🔄 Match Score Reset Feature
+- **Score Reversion**: Added a **"🔄 Reset Score"** button inside the Result Modal for played fixtures.
+- **Safe State Reversion**: Reverts match status from `played` to `pending`, clears scores, automatically un-serves suspensions served in that match, cleans up red cards issued in it, and re-evaluates qualification badges.
 
 ---
 
-### 4. 🔄 Match Score Reset Feature
-- **Reset Saved Results**: Added a **"🔄 Reset Score"** button inside the match result modal for played fixtures.
-- **Safe Reversion**: Reverts match status back to `PENDING`, clears scores and red cards, restores served suspensions, and safely cleans up premature playoff brackets.
-- **Confirmation Guard**: Integrated confirmation modal to prevent accidental score resets.
+### 3. 🌐 Client-Side SPA Page Routing (`react-router-dom`)
+- **Bookmarkable Page URLs**: Migrated from internal state view-switching to `react-router-dom` v7 routes:
+  - `/` — Home Page (In-Progress tournaments & Admin creation form)
+  - `/history` — Tournament History List
+  - `/history/:id` — Tournament History Details
+  - `/stats` — Leaderboard & Stats Analytics Hub
+  - `/teams` — Saved Manager Profiles, Trade Modal & Settings
+  - `/tournament/:id` — Live Tournament Hub
+- **Vercel SPA Configuration**: Added `vercel.json` SPA rewrite rules (`[{ "source": "/(.*)", "destination": "/index.html" }]`) to support direct URL access and browser refreshes on Vercel deployments out of the box.
 
 ---
 
-### 5. 🎨 Visual Refinements & Mobile Optimization
-- **Scores Display**: Losing team's goal count renders in red (`var(--red)`) across all match scores.
-- **Terminology Updates**: Renamed "Saved Teams" and "+New Team" to "Saved Profiles" and "+New Profile".
-- **Mobile Card Button Polish**:
-  - Removed stretched `100%` full-width buttons on mobile cards (`@media (max-width: 640px)`).
-  - Standardized compact button padding for `Spectate Live`, `Open`, `Delete`, and `Teams` buttons.
-  - Centered action buttons horizontally (`.history-actions`), fixing off-center 8px shifts on mobile cards.
-- **UI Polish**: Displayed Manager Name in profile dialogs for Viewers and improved text contrast for club names in dialogs.
+### 4. 📊 Detailed Stats Implementation (`/stats`)
+- **Lifetime Manager Standings**: Default landing view featuring Rank, Manager, Played, Wins 🏆, and Runner-Up 🥈 (Win Rate column removed).
+- **Show/Hide Stats Toggle**: Dropdown button (`Show Stats ▾` / `Hide Stats ▴`) minimizing/maximizing analytics on demand.
+- **5 Detailed Analytics Tabs**:
+  1. 📈 **Performance Leaderboard**: W/D/L match records, last 5 match form badges (`🟢 W`, `🟡 D`, `🔴 L`), and all-time longest winning streak.
+  2. ⚽ **Goals & Records**: Left-aligned sortable Goal Machine table (`GF`, `GA`, `GD`, `Avg`), Clean Sheets leaderboard, and Record Cards with matchday/phase details (`Summer Champions League 2026 · Matchday 3`).
+  3. ⚔️ **Head-to-Head Rivalry Finder**: Interactive Manager A vs Manager B selector with "League Match Wins" label, goal tallies, playoff wins, and `"Never met in a playoff match before!"` fallback message + Fiercest Playoff Rivalry banner.
+  4. 🏆 **Clutch Factor**: Trophy Cabinet (`Manager`, `Finals`, `Gold 🥇`, `Silver 🥈`, `Finals Win Rate %`) and Penalty Shootout Record (`Won`, `Lost`).
+  5. 🟥 **Bad Boy Leaderboard**: Manager Red Cards record & Most Carded Squad Players leaderboard with accurate manager attribution.
 
 ---
+
+### 5. 🔍 Search & Filtering in Tournament History (`/history`)
+- **Instant Search Bar**: Filter completed tournaments by Tournament Name or Champion/Manager Name.
+- **Multi-Parameter Dropdowns**: Filter by Player Count (`3`, `4`, `5` players) and Legs (`1` or `2` legs).
+- **Empty Filter State**: Clean UI feedback when search or filter criteria return no matches.
+
+---
+
+### 6. 🔄 Player Trade Feature (`/teams`)
+- **1-Click Squad Trade Modal**: Allows the Admin/Owner to exchange squad players between any two saved manager profiles without manually deleting and re-adding players.
+- **Multi-Team Squad Parsing & Filtering**: Automatically extracts squads from multi-team profiles and filters out squadless team entries.
+
+---
+
+### 7. 🎨 Per-User Cloud UI Theme Accent Switcher (`/teams`)
+- **5 Accent Color Presets**: 🟢 Emerald Green (`#00c896`), 🔵 Electric Blue (`#4a90e2`), 🟡 Champions Gold (`#f5a623`), 🟣 Neon Violet (`#9f7aea`), 🔴 Crimson Red (`#f56565`).
+- **Per-User Cloud Sync**: Theme preferences are saved per user account in Firestore (`config/settings`) under `userThemes[uid]`, updating the UI instantly on local devices with a synchronous Toast notification and real-time syncing across all devices logged into the account.
+
+---
+
+### 8. 📱 Visual Refinements & Mobile Optimization
+- **Compact Button Sizing**: Eliminated full-width button stretching on mobile cards for In-Progress, History, and Teams cards.
+- **Centered Action Container**: Wrapped mobile action buttons in centered flex containers.
+- **Score Color Distinction**: Displayed losing team score in subtle red for immediate visual contrast.
+- **Manual Penalty Shootout Score Entry**: Option to record penalty shootout scores (`7-6 pen`) for knockout draws.
