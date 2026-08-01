@@ -25,6 +25,16 @@ export const updateAdminPresence = (activeTournamentId, isEditing) =>
     }
   }, { merge: true });
 
+// ─── Per-User Settings (Firebase Cloud Preferences) ─────────────────────────
+
+export const subscribeToUserSettings = (uid, callback) =>
+  onSnapshot(doc(db, 'users', uid), snapshot => {
+    callback(snapshot.exists() ? snapshot.data() : null);
+  });
+
+export const saveUserSettings = (uid, data) =>
+  setDoc(doc(db, 'users', uid), data, { merge: true });
+
 // ─── Active Tournament ───────────────────────────────────────────────────
 
 export const subscribeToTournament = (callback) =>

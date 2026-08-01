@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import useStore from '../store/useStore.js';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { useToast } from '../contexts/ToastContext.jsx';
-import { saveProfile, deleteProfile, saveSettings } from '../services/firestoreService.js';
+import { saveProfile, deleteProfile, saveUserSettings } from '../services/firestoreService.js';
 import { THEME_PRESETS } from '../logic/theme.js';
 import EditProfileModal from '../components/modals/EditProfileModal.jsx';
 import TradeModal from '../components/modals/TradeModal.jsx';
@@ -35,16 +35,15 @@ export default function ProfilesPage() {
 
   const handleExecuteTrade = async (profA, profB, playerA, playerB) => {
     await saveProfile(profA);
-    await saveProfile(profB);
+    if (profA.id !== profB.id) {
+      await saveProfile(profB);
+    }
     toast(`Traded "${playerA}" ⇄ "${playerB}" successfully! ✓`, 'ok');
   };
 
   const handleThemeChange = async (preset) => {
-    if (!isAdmin) {
-      toast('Only admin can update app theme accent', 'err');
-      return;
-    }
-    await saveSettings({ themeAccent: preset.hex });
+    if (!currentUser) return;
+    await saveUserSettings(currentUser.uid, { themeAccent: preset.hex });
     toast(`Theme accent updated to ${preset.name} ✓`, 'ok');
   };
 
@@ -87,11 +86,11 @@ export default function ProfilesPage() {
           </div>
         </div>
 
-        {/* 🎨 UI Theme Accent Switcher */}
+        {/* 🎨 Per-User UI Theme Accent Switcher */}
         <div className="setup-card">
-          <div className="setup-card-title">🎨 App Theme Accent</div>
+          <div className="setup-card-title">🎨 My Theme Accent</div>
           <p style={{ fontSize: 13, color: 'var(--t2)', marginBottom: 14 }}>
-            Select a custom primary accent color. Persisted to Firebase for all users across the app.
+            Choose your personal accent color preference. Saved to your cloud account so it follows you on all your devices.
           </p>
 
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
@@ -122,7 +121,7 @@ export default function ProfilesPage() {
                 <button
                   className="btn btn-sm btn-secondary"
                   onClick={() => setShowTradeModal(true)}
-                  disabled={profiles.length < 2}
+                  disabled={profiles.length < 1}
                   style={{ textTransform: 'none', letterSpacing: 0, fontSize: 13 }}
                 >
                   🔄 Trade Players
