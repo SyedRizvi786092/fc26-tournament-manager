@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import useStore from '../store/useStore.js';
 import { useAuth } from '../contexts/AuthContext.jsx';
@@ -133,6 +134,11 @@ export default function HistoryDetailsPage() {
   const { historyTab, setHistoryTab, history, tournament, openModal } = useStore();
   const { isAdmin } = useAuth();
   const toast = useToast();
+
+  // Always reset tab to 'result' whenever a history tournament page is opened / ID changes
+  useEffect(() => {
+    setHistoryTab('result');
+  }, [id, setHistoryTab]);
 
   const t = history.find(h => h.id === id) || (tournament?.id === id ? tournament : null);
 
