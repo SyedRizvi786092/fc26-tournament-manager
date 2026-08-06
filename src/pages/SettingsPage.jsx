@@ -50,6 +50,16 @@ export default function SettingsPage() {
     ? linkedProfile.managerName
     : (currentUser && userNames?.[currentUser.uid]) || currentUser?.displayName || (currentUser?.email ? currentUser.email.split('@')[0] : 'User');
 
+  // Current active theme name
+  const currentThemePreset = THEME_PRESETS.find(
+    p => p.hex.toLowerCase() === (themeAccent || '#00c896').toLowerCase()
+  ) || THEME_PRESETS[0];
+
+  // User's manager registration request
+  const userRequest = currentUser
+    ? managerRequests.find(r => r.uid === currentUser.uid)
+    : null;
+
   // Handlers
   const handleSaveName = async (newName) => {
     if (!currentUser) return;

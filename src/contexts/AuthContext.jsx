@@ -17,17 +17,20 @@ export function AuthProvider({ children }) {
       if (user) {
         try {
           const snap = await getSettings();
-          if (snap.exists()) {
-            const { adminUid: storedUid } = snap.data();
-            setAdminUid(storedUid);
+          if (snap.exists() && snap.data()?.adminUid) {
+            setAdminUid(snap.data().adminUid);
             setSetupNeeded(false);
-          } else {
-            // No config yet — first run, let this user claim admin
+          } else if (!snap.exists()) {
             setAdminUid(null);
             setSetupNeeded(true);
+          } else {
+            setAdminUid(null);
+            setSetupNeeded(false);
           }
-        } catch {
+        } catch (err) {
+          console.error("AuthContext settings error:", err);
           setAdminUid(null);
+          setSetupNeeded(false);
         }
       } else {
         setAdminUid(null);

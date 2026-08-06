@@ -27,19 +27,24 @@ export const updateAdminPresence = (activeTournamentId, isEditing) =>
 
 // ─── Per-User Cloud Preferences ─────────────────────────────────────────
 
-export const saveUserThemeAccent = (uid, themeAccent) =>
-  setDoc(doc(db, 'config', 'settings'), {
+export const saveUserThemeAccent = (uid, themeAccent) => {
+  localStorage.setItem(`fc26_theme_${uid}`, themeAccent);
+  return setDoc(doc(db, 'config', 'settings'), {
     userThemes: {
       [uid]: themeAccent,
     }
-  }, { merge: true });
+  }, { merge: true }).catch(() => {});
+};
 
-export const saveUserName = (uid, displayName) =>
-  setDoc(doc(db, 'config', 'settings'), {
-    userNames: {
-      [uid]: displayName,
-    }
-  }, { merge: true });
+export const saveUserName = (uid, displayName) => {
+  localStorage.setItem(`fc26_username_${uid}`, displayName);
+  return setDoc(doc(db, 'profiles', `user_${uid}`), {
+    id: `user_${uid}`,
+    isUserProfile: true,
+    uid,
+    displayName,
+  }, { merge: true }).catch(() => {});
+};
 
 // ─── Active Tournament ───────────────────────────────────────────────────
 
@@ -70,7 +75,6 @@ export const deleteFromHistory = (id) =>
 
 /**
  * Batch-update history entries with profileId tags (one-time migration).
- * @param {Array} updatedEntries - Array of { id, ...tournamentData } objects with profileId fields added to players.
  */
 export const batchUpdateHistory = async (updatedEntries) => {
   const promises = updatedEntries.map(entry =>
@@ -83,7 +87,10 @@ export const batchUpdateHistory = async (updatedEntries) => {
 
 export const subscribeToProfiles = (callback) =>
   onSnapshot(collection(db, 'profiles'), snapshot => {
-    callback(snapshot.docs.map(d => d.data()));
+    const list = snapshot.docs
+      .map(d => d.data())
+      .filter(d => !d.isManagerRequest && !d.isUserProfile);
+    callback(list);
   });
 
 export const saveProfile = (profile) =>
@@ -94,8 +101,6 @@ export const deleteProfile = (id) =>
 
 /**
  * Link a Google email address to a manager profile.
- * @param {string} profileId - The profile document ID.
- * @param {string} email - The Google email to link.
  */
 export const linkManagerEmail = (profileId, email) =>
   setDoc(doc(db, 'profiles', profileId), {
@@ -105,13 +110,11 @@ export const linkManagerEmail = (profileId, email) =>
 
 /**
  * Update manager customization fields (avatar, favoriteTeamId).
- * @param {string} profileId
- * @param {object} data - { avatar?: string, favoriteTeamId?: string }
  */
 export const updateManagerCustomization = (profileId, data) =>
   setDoc(doc(db, 'profiles', profileId), data, { merge: true });
 
-// ─── Trades (stored under config/settings to avoid permission issues) ──────
+// ─── Trades (stored in config/settings) ───────────────────────────────────
 
 export const subscribeToTrades = (callback) =>
   onSnapshot(
@@ -124,10 +127,6 @@ export const subscribeToTrades = (callback) =>
     }
   );
 
-/**
- * Create a new trade proposal.
- * @param {object} trade - Trade proposal object.
- */
 export const createTradeProposal = async (trade) => {
   const tradeId = 'trade_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
   const now = new Date();
@@ -150,9 +149,6 @@ export const createTradeProposal = async (trade) => {
   return tradeId;
 };
 
-/**
- * Accept a trade proposal by selecting a player from the offered list.
- */
 export const acceptTrade = (tradeId, selectedPlayer) =>
   setDoc(doc(db, 'config', 'settings'), {
     trades: {
@@ -164,9 +160,6 @@ export const acceptTrade = (tradeId, selectedPlayer) =>
     }
   }, { merge: true });
 
-/**
- * Reject a trade proposal.
- */
 export const rejectTrade = (tradeId) =>
   setDoc(doc(db, 'config', 'settings'), {
     trades: {
@@ -177,9 +170,6 @@ export const rejectTrade = (tradeId) =>
     }
   }, { merge: true });
 
-/**
- * Cancel a trade proposal.
- */
 export const cancelTrade = (tradeId) =>
   setDoc(doc(db, 'config', 'settings'), {
     trades: {
@@ -190,9 +180,6 @@ export const cancelTrade = (tradeId) =>
     }
   }, { merge: true });
 
-/**
- * Mark a trade as expired.
- */
 export const expireTrade = (tradeId) =>
   setDoc(doc(db, 'config', 'settings'), {
     trades: {
@@ -203,9 +190,6 @@ export const expireTrade = (tradeId) =>
     }
   }, { merge: true });
 
-/**
- * Mark trade notifications as read for a user.
- */
 export const markTradeRead = (tradeId, uid) =>
   setDoc(doc(db, 'config', 'settings'), {
     trades: {
@@ -215,39 +199,42 @@ export const markTradeRead = (tradeId, uid) =>
     }
   }, { merge: true });
 
-// ─── Manager Registration Requests (stored under config/settings) ──────────
+// ─── Manager Registration Requests (stored in profiles collection) ──────────
 
 export const subscribeToManagerRequests = (callback) =>
   onSnapshot(
-    doc(db, 'config', 'settings'),
+    collection(db, 'profiles'),
     snapshot => {
-      const data = snapshot.exists() ? snapshot.data() : {};
-      const requestsMap = data.managerRequests || {};
-      const list = Object.values(requestsMap).sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+      const list = snapshot.docs
+        .map(d => d.data())
+        .filter(d => d.isManagerRequest === true)
+        .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
       callback(list);
     }
   );
 
 export const sendManagerRequest = async (requestData) => {
   const now = new Date().toISOString();
-  await setDoc(doc(db, 'config', 'settings'), {
-    managerRequests: {
-      [requestData.uid]: {
-        id: requestData.uid,
-        ...requestData,
-        status: 'pending',
-        createdAt: now,
-      }
-    }
-  }, { merge: true });
+  const reqDoc = {
+    id: 'req_' + requestData.uid,
+    isManagerRequest: true,
+    uid: requestData.uid,
+    userEmail: requestData.userEmail.toLowerCase(),
+    userName: requestData.userName,
+    status: 'pending',
+    createdAt: now,
+  };
+  await setDoc(doc(db, 'profiles', reqDoc.id), reqDoc);
 };
 
-export const resolveManagerRequest = (targetUid, status) =>
-  setDoc(doc(db, 'config', 'settings'), {
-    managerRequests: {
-      [targetUid]: {
-        status,
-        resolvedAt: new Date().toISOString(),
-      }
-    }
-  }, { merge: true });
+export const resolveManagerRequest = async (targetUid, status) => {
+  const reqDocId = 'req_' + targetUid;
+  if (status === 'accepted') {
+    await deleteDoc(doc(db, 'profiles', reqDocId)).catch(() => {});
+  } else {
+    await setDoc(doc(db, 'profiles', reqDocId), {
+      status,
+      resolvedAt: new Date().toISOString(),
+    }, { merge: true });
+  }
+};

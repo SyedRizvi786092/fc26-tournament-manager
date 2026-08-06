@@ -227,7 +227,8 @@ export default function HomePage() {
     }
   };
 
-  const needsFirstLoginName = currentUser && !isAdmin && !isManager && userNames && !userNames[currentUser.uid];
+  const localSavedName = currentUser ? localStorage.getItem(`fc26_username_${currentUser.uid}`) : null;
+  const needsFirstLoginName = currentUser && !isAdmin && !isManager && !localSavedName && userNames && !userNames[currentUser.uid];
 
   // Find existing request for current user
   const userRequest = currentUser
