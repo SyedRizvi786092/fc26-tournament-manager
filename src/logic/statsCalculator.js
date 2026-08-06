@@ -10,12 +10,23 @@ function norm(name) {
   return (name || '').trim().toLowerCase();
 }
 
+// Helper to resolve player display name from profiles if profileId exists
+function resolveName(p, profiles = []) {
+  if (!p) return 'Unknown';
+  if (p.profileId && profiles.length > 0) {
+    const prof = profiles.find(pr => pr.id === p.profileId);
+    if (prof && prof.managerName) return prof.managerName.trim();
+  }
+  return p.name ? p.name.trim() : 'Unknown';
+}
+
 // Collect all unique manager names across history & active tournament
-export function getAllManagerNames(history = [], tournament = null) {
+export function getAllManagerNames(history = [], tournament = null, profiles = []) {
   const names = new Set();
   const addPlayers = (players) => {
     (players || []).forEach(p => {
-      if (p.name?.trim()) names.add(p.name.trim());
+      const name = resolveName(p, profiles);
+      if (name) names.add(name);
     });
   };
 
@@ -26,13 +37,13 @@ export function getAllManagerNames(history = [], tournament = null) {
 }
 
 // Extract all played matches across history & active tournament
-function getAllPlayedMatches(history = [], tournament = null) {
+function getAllPlayedMatches(history = [], tournament = null, profiles = []) {
   const matches = [];
 
   const processTournament = (t) => {
     if (!t) return;
     const playerMap = {};
-    (t.players || []).forEach(p => { playerMap[p.id] = p.name?.trim(); });
+    (t.players || []).forEach(p => { playerMap[p.id] = resolveName(p, profiles); });
 
     if (t.isManual && t.final) {
       const homeName = playerMap[t.final.homeId] || 'Unknown';
@@ -90,7 +101,7 @@ function getAllPlayedMatches(history = [], tournament = null) {
 }
 
 /* ── 0. Default Lifetime Manager Standings ──────────────────────────────── */
-export function getLifetimeStandings(history = [], tournament = null) {
+export function getLifetimeStandings(history = [], tournament = null, profiles = []) {
   const stats = {};
 
   const getEntry = (name) => {
@@ -101,10 +112,10 @@ export function getLifetimeStandings(history = [], tournament = null) {
 
   const processCompleted = (h) => {
     if (!h || h.status !== 'complete') return;
-    (h.players || []).forEach(p => getEntry(p.name).played++);
+    (h.players || []).forEach(p => getEntry(resolveName(p, profiles)).played++);
 
     const champPlayer = (h.players || []).find(p => p.id === h.champion);
-    if (champPlayer) getEntry(champPlayer.name).wins++;
+    if (champPlayer) getEntry(resolveName(champPlayer, profiles)).wins++;
 
     let ruPlayer = null;
     if (h.isManual && h.final) {
@@ -120,7 +131,7 @@ export function getLifetimeStandings(history = [], tournament = null) {
         if (ruId) ruPlayer = (h.players || []).find(p => p.id === ruId);
       }
     }
-    if (ruPlayer) getEntry(ruPlayer.name).runnerUps++;
+    if (ruPlayer) getEntry(resolveName(ruPlayer, profiles)).runnerUps++;
   };
 
   (history || []).forEach(h => processCompleted(h));
@@ -134,9 +145,9 @@ export function getLifetimeStandings(history = [], tournament = null) {
 }
 
 /* ── 1. Performance Leaderboard (W/D/L, Win %, Form, Longest Streak) ──── */
-export function getPerformanceStats(history = [], tournament = null) {
-  const managers = getAllManagerNames(history, tournament);
-  const matches  = getAllPlayedMatches(history, tournament);
+export function getPerformanceStats(history = [], tournament = null, profiles = []) {
+  const managers = getAllManagerNames(history, tournament, profiles);
+  const matches  = getAllPlayedMatches(history, tournament, profiles);
 
   const data = {};
   managers.forEach(m => {
@@ -213,9 +224,9 @@ export function getPerformanceStats(history = [], tournament = null) {
 }
 
 /* ── 2. Goals & Records (Goal Machine, Clean Sheets, Blowouts) ─────────── */
-export function getGoalStats(history = [], tournament = null) {
-  const managers = getAllManagerNames(history, tournament);
-  const matches  = getAllPlayedMatches(history, tournament);
+export function getGoalStats(history = [], tournament = null, profiles = []) {
+  const managers = getAllManagerNames(history, tournament, profiles);
+  const matches  = getAllPlayedMatches(history, tournament, profiles);
 
   const data = {};
   managers.forEach(m => {
@@ -254,275 +265,233 @@ export function getGoalStats(history = [], tournament = null) {
 
   const goalMachine = Object.values(data).map(m => {
     m.GD = m.GF - m.GA;
-    m.avgGF = m.played > 0 ? m.GF / m.played : 0;
-    m.cleanSheetPct = m.played > 0 ? (m.cleanSheets / m.played) * 100 : 0;
+    m.avgGF = m.played > 0 ? parseFloat((m.GF / m.played).toFixed(2)) : 0;
+    m.cleanSheetPct = m.played > 0 ? parseFloat(((m.cleanSheets / m.played) * 100).toFixed(1)) : 0;
     return m;
   });
 
-  const cleanSheets = [...goalMachine].sort((a, b) => {
-    if (b.cleanSheetPct !== a.cleanSheetPct) return b.cleanSheetPct - a.cleanSheetPct;
-    if (b.cleanSheets !== a.cleanSheets) return b.cleanSheets - a.cleanSheets;
-    return a.played - b.played;
-  });
-
-  // Helper for match label (Matchday / Eliminator / Final)
-  const formatMatchLabel = (m) => {
-    if (m.phase === 'final') return '⭐ Grand Final';
-    if (m.phase === 'eliminator') return '🔥 Eliminator';
-    return `Matchday ${m.matchday}`;
-  };
-
-  const largestMargin = [...matches]
-    .filter(m => m.homeScore !== m.awayScore)
-    .map(m => {
-      const isHomeWin = m.homeScore > m.awayScore;
-      const winner = isHomeWin ? m.homeName : m.awayName;
-      const loser  = isHomeWin ? m.awayName : m.homeName;
-      const wScore = isHomeWin ? m.homeScore : m.awayScore;
-      const lScore = isHomeWin ? m.awayScore : m.homeScore;
-      const margin = wScore - lScore;
-      return { ...m, winner, loser, wScore, lScore, margin, matchLabel: formatMatchLabel(m) };
-    })
-    .sort((a, b) => b.margin - a.margin || (b.wScore + b.lScore) - (a.wScore + a.lScore))
-    .slice(0, 5);
-
-  const highestScoring = [...matches]
-    .map(m => ({ ...m, totalGoals: m.homeScore + m.awayScore, matchLabel: formatMatchLabel(m) }))
-    .sort((a, b) => b.totalGoals - a.totalGoals)
-    .slice(0, 5);
-
-  return { goalMachine, cleanSheets, largestMargin, highestScoring };
-}
-
-/* ── 3. Head-to-Head Rivalry Finder ───────────────────────────────────── */
-export function getH2HStats(managerA, managerB, history = [], tournament = null) {
-  if (!managerA || !managerB || norm(managerA) === norm(managerB)) return null;
-
-  const aKey = norm(managerA);
-  const bKey = norm(managerB);
-  const matches = getAllPlayedMatches(history, tournament);
-
-  const h2h = {
-    managerA,
-    managerB,
-    totalPlayed: 0,
-    aWins: 0,
-    bWins: 0,
-    draws: 0,
-    aGoals: 0,
-    bGoals: 0,
-    playoffPlayed: 0,
-    aPlayoffWins: 0,
-    bPlayoffWins: 0,
-  };
+  // Calculate Single-Match Records
+  let maxGFMatch = null;
+  let maxMarginMatch = null;
 
   matches.forEach(m => {
-    const hK = norm(m.homeName);
-    const aK = norm(m.awayName);
+    if (!maxGFMatch || m.homeScore > maxGFMatch.goals || m.awayScore > maxGFMatch.goals) {
+      const topGF = Math.max(m.homeScore, m.awayScore);
+      const isHome = m.homeScore >= m.awayScore;
+      if (!maxGFMatch || topGF > maxGFMatch.goals) {
+        maxGFMatch = {
+          manager: isHome ? m.homeName : m.awayName,
+          opponent: isHome ? m.awayName : m.homeName,
+          goals: topGF,
+          score: `${m.homeScore} - ${m.awayScore}`,
+          tournamentName: m.tournamentName,
+        };
+      }
+    }
 
-    if (!((hK === aKey && aK === bKey) || (hK === bKey && aK === aKey))) return;
+    const margin = Math.abs(m.homeScore - m.awayScore);
+    if (!maxMarginMatch || margin > maxMarginMatch.margin) {
+      const isHome = m.homeScore > m.awayScore;
+      maxMarginMatch = {
+        winner: isHome ? m.homeName : m.awayName,
+        loser: isHome ? m.awayName : m.homeName,
+        margin,
+        score: `${m.homeScore} - ${m.awayScore}`,
+        tournamentName: m.tournamentName,
+      };
+    }
+  });
 
-    h2h.totalPlayed++;
-    const isAHome = hK === aKey;
-    const aScore  = isAHome ? m.homeScore : m.awayScore;
-    const bScore  = isAHome ? m.awayScore : m.homeScore;
+  return { goalMachine, maxGFMatch, maxMarginMatch };
+}
 
-    h2h.aGoals += aScore;
-    h2h.bGoals += bScore;
+/* ── 3. Head-to-Head Matrix ─────────────────────────────────────────────── */
+export function getH2HStats(managerA, managerB, history = [], tournament = null, profiles = []) {
+  if (!managerA || !managerB || norm(managerA) === norm(managerB)) {
+    return null;
+  }
 
-    const isPlayoff = m.phase === 'eliminator' || m.phase === 'final';
-    if (isPlayoff) h2h.playoffPlayed++;
+  const matches = getAllPlayedMatches(history, tournament, profiles);
+  const keyA = norm(managerA);
+  const keyB = norm(managerB);
 
-    if (aScore > bScore) {
-      h2h.aWins++;
-      if (isPlayoff) h2h.aPlayoffWins++;
-    } else if (bScore > aScore) {
-      h2h.bWins++;
-      if (isPlayoff) h2h.bPlayoffWins++;
+  let totalPlayed = 0;
+  let winsA = 0;
+  let winsB = 0;
+  let draws = 0;
+  let gfA = 0;
+  let gfB = 0;
+  const h2hMatches = [];
+
+  matches.forEach(m => {
+    const hKey = norm(m.homeName);
+    const aKey = norm(m.awayName);
+
+    const isMatch = (hKey === keyA && aKey === keyB) || (hKey === keyB && aKey === keyA);
+    if (!isMatch) return;
+
+    totalPlayed++;
+    const isAHome = hKey === keyA;
+    const scoreA = isAHome ? m.homeScore : m.awayScore;
+    const scoreB = isAHome ? m.awayScore : m.homeScore;
+
+    gfA += scoreA;
+    gfB += scoreB;
+
+    let winner = null;
+    if (scoreA > scoreB) {
+      winsA++;
+      winner = managerA;
+    } else if (scoreB > scoreA) {
+      winsB++;
+      winner = managerB;
     } else if (m.penaltyWinnerName) {
-      if (norm(m.penaltyWinnerName) === aKey) {
-        h2h.aWins++;
-        if (isPlayoff) h2h.aPlayoffWins++;
+      if (norm(m.penaltyWinnerName) === keyA) {
+        winsA++;
+        winner = managerA;
       } else {
-        h2h.bWins++;
-        if (isPlayoff) h2h.bPlayoffWins++;
+        winsB++;
+        winner = managerB;
       }
     } else {
-      h2h.draws++;
+      draws++;
     }
+
+    h2hMatches.push({
+      id: m.id,
+      tournamentName: m.tournamentName,
+      date: m.date,
+      score: `${scoreA} - ${scoreB}`,
+      winner,
+      penaltyWinner: m.penaltyWinnerName,
+    });
   });
 
-  return h2h;
+  return {
+    managerA,
+    managerB,
+    totalPlayed,
+    winsA,
+    winsB,
+    draws,
+    gfA,
+    gfB,
+    gdA: gfA - gfB,
+    gdB: gfB - gfA,
+    matches: h2hMatches.sort((a, b) => new Date(b.date) - new Date(a.date)),
+  };
 }
 
-export function getFiercestRivalry(history = [], tournament = null) {
-  const matches = getAllPlayedMatches(history, tournament);
-  const pairings = {};
+/* ── 4. Fiercest Rivalry ────────────────────────────────────────────────── */
+export function getFiercestRivalry(history = [], tournament = null, profiles = []) {
+  const matches = getAllPlayedMatches(history, tournament, profiles);
+  const pairMap = {};
 
   matches.forEach(m => {
-    const isPlayoff = m.phase === 'eliminator' || m.phase === 'final';
-    if (!isPlayoff) return;
-
-    const pair = [m.homeName.trim(), m.awayName.trim()].sort((a, b) => a.localeCompare(b));
-    const key  = pair.join(' vs ');
-
-    if (!pairings[key]) {
-      pairings[key] = { managerA: pair[0], managerB: pair[1], playoffCount: 0, totalCount: 0 };
-    }
-    pairings[key].playoffCount++;
+    const pairKey = [m.homeName, m.awayName].sort((a, b) => a.localeCompare(b)).join(' vs ');
+    pairMap[pairKey] = (pairMap[pairKey] || 0) + 1;
   });
 
-  const list = Object.values(pairings).sort((a, b) => b.playoffCount - a.playoffCount);
-  if (!list.length) return null;
+  let topPair = null;
+  let maxMatches = 0;
 
-  const top = list[0];
-  const fullH2H = getH2HStats(top.managerA, top.managerB, history, tournament);
-  return { ...top, fullH2H };
+  Object.entries(pairMap).forEach(([pair, count]) => {
+    if (count > maxMatches) {
+      maxMatches = count;
+      topPair = pair;
+    }
+  });
+
+  return topPair ? { pair: topPair, count: maxMatches } : null;
 }
 
-/* ── 4. Clutch Factor (Trophies, Finals Win %, Penalties Record) ────────── */
-export function getClutchStats(history = [], tournament = null) {
-  const managers = getAllManagerNames(history, tournament);
-  const matches  = getAllPlayedMatches(history, tournament);
+/* ── 5. Clutch Kings (Penalty Shootouts & Finals) ────────────────────────── */
+export function getClutchStats(history = [], tournament = null, profiles = []) {
+  const managers = getAllManagerNames(history, tournament, profiles);
+  const matches  = getAllPlayedMatches(history, tournament, profiles);
 
   const data = {};
   managers.forEach(m => {
     data[norm(m)] = {
       name: m,
-      gold: 0,
-      silver: 0,
-      totalFinals: 0,
-      finalsWinRate: 0,
       shootoutsPlayed: 0,
       shootoutsWon: 0,
-      shootoutsLost: 0,
       shootoutWinRate: 0,
+      finalPlayed: 0,
+      finalWon: 0,
     };
   });
 
-  const processCompleted = (h) => {
-    if (!h || h.status !== 'complete') return;
-    const playerMap = {};
-    (h.players || []).forEach(p => { playerMap[p.id] = p.name.trim(); });
-
-    const champName = playerMap[h.champion];
-    let ruName = null;
-
-    if (h.isManual && h.final) {
-      const ruId = h.final.homeId === h.champion ? h.final.awayId : h.final.homeId;
-      ruName = playerMap[ruId];
-    } else {
-      const fin = (h.fixtures || []).find(f => f.phase === 'final');
-      if (fin && fin.status === 'played') {
-        let ruId = null;
-        if      (fin.homeScore > fin.awayScore) ruId = fin.awayId;
-        else if (fin.awayScore > fin.homeScore) ruId = fin.homeId;
-        else if (fin.penaltyWinner) ruId = fin.penaltyWinner === fin.homeId ? fin.awayId : fin.homeId;
-        if (ruId) ruName = playerMap[ruId];
-      }
-    }
-
-    if (champName && data[norm(champName)]) {
-      data[norm(champName)].gold++;
-      data[norm(champName)].totalFinals++;
-    }
-    if (ruName && data[norm(ruName)]) {
-      data[norm(ruName)].silver++;
-      data[norm(ruName)].totalFinals++;
-    }
-  };
-
-  (history || []).forEach(h => processCompleted(h));
-  if (tournament && tournament.status === 'complete') processCompleted(tournament);
-
   matches.forEach(m => {
-    if (!m.penaltyWinnerName) return;
     const hKey = norm(m.homeName);
     const aKey = norm(m.awayName);
-    const wKey = norm(m.penaltyWinnerName);
-    const lKey = wKey === hKey ? aKey : hKey;
+    const h = data[hKey];
+    const a = data[aKey];
 
-    if (data[wKey]) {
-      data[wKey].shootoutsPlayed++;
-      data[wKey].shootoutsWon++;
+    if (!h || !a) return;
+
+    if (m.penaltyWinnerName) {
+      h.shootoutsPlayed++;
+      a.shootoutsPlayed++;
+      if (norm(m.penaltyWinnerName) === hKey) h.shootoutsWon++;
+      if (norm(m.penaltyWinnerName) === aKey) a.shootoutsWon++;
     }
-    if (data[lKey]) {
-      data[lKey].shootoutsPlayed++;
-      data[lKey].shootoutsLost++;
+
+    if (m.phase === 'final') {
+      h.finalPlayed++;
+      a.finalPlayed++;
+      let winnerKey = null;
+      if (m.homeScore > m.awayScore) winnerKey = hKey;
+      else if (m.awayScore > m.homeScore) winnerKey = aKey;
+      else if (m.penaltyWinnerName) winnerKey = norm(m.penaltyWinnerName);
+
+      if (winnerKey === hKey) h.finalWon++;
+      if (winnerKey === aKey) a.finalWon++;
     }
   });
 
   const list = Object.values(data).map(m => {
-    m.finalsWinRate = m.totalFinals > 0 ? (m.gold / m.totalFinals) * 100 : 0;
     m.shootoutWinRate = m.shootoutsPlayed > 0 ? (m.shootoutsWon / m.shootoutsPlayed) * 100 : 0;
     return m;
   });
 
   return list.sort((a, b) => {
-    if (b.gold !== a.gold) return b.gold - a.gold;
-    if (b.silver !== a.silver) return b.silver - a.silver;
-    return b.finalsWinRate - a.finalsWinRate;
+    if (b.shootoutsWon !== a.shootoutsWon) return b.shootoutsWon - a.shootoutsWon;
+    return b.finalWon - a.finalWon;
   });
 }
 
-/* ── 5. Bad Boy Leaderboard (Manager & Squad Player Red Cards) ─────────── */
-export function getDisciplineStats(history = [], tournament = null) {
-  const managers = getAllManagerNames(history, tournament);
-  const matches  = getAllPlayedMatches(history, tournament);
+/* ── 6. Discipline & Red Cards ──────────────────────────────────────────── */
+export function getDisciplineStats(history = [], tournament = null, profiles = []) {
+  const managers = getAllManagerNames(history, tournament, profiles);
+  const matches  = getAllPlayedMatches(history, tournament, profiles);
 
-  const managerData = {};
+  const data = {};
   managers.forEach(m => {
-    managerData[norm(m)] = {
+    data[norm(m)] = {
       name: m,
-      played: 0,
       redCards: 0,
-      cardsPerMatch: 0,
     };
   });
 
-  const squadPlayers = {};
+  const processRedCards = (t) => {
+    if (!t) return;
+    const playerMap = {};
+    (t.players || []).forEach(p => { playerMap[p.id] = resolveName(p, profiles); });
 
-  matches.forEach(m => {
-    const hKey = norm(m.homeName);
-    const aKey = norm(m.awayName);
-    if (managerData[hKey]) managerData[hKey].played++;
-    if (managerData[aKey]) managerData[aKey].played++;
-
-    (m.redCards || []).forEach(rc => {
-      // Correct team & manager resolution by matching teamId to homeId or awayId
-      let teamName = null;
-      if (rc.teamId && rc.teamId === m.homeId) teamName = m.homeName;
-      else if (rc.teamId && rc.teamId === m.awayId) teamName = m.awayName;
-      else {
-        // Fallback matching
-        const nH = norm(m.homeName), nA = norm(m.awayName), nT = norm(rc.teamId);
-        teamName = nT === nH ? m.homeName : (nT === nA ? m.awayName : m.homeName);
-      }
-
-      const mKey = norm(teamName);
-      if (managerData[mKey]) {
-        managerData[mKey].redCards++;
-      }
-
-      const pName = (rc.playerName || '').trim();
-      if (pName) {
-        const pKey = `${norm(pName)}_${mKey}`;
-        if (!squadPlayers[pKey]) {
-          squadPlayers[pKey] = { name: pName, manager: teamName, count: 0 };
+    (t.fixtures || []).forEach(f => {
+      if (f.status !== 'played' || !f.redCards) return;
+      f.redCards.forEach(rc => {
+        const mgrName = playerMap[rc.teamId];
+        if (mgrName && data[norm(mgrName)]) {
+          data[norm(mgrName)].redCards++;
         }
-        squadPlayers[pKey].count++;
-      }
+      });
     });
-  });
+  };
 
-  const managerDiscipline = Object.values(managerData)
-    .map(m => {
-      m.cardsPerMatch = m.played > 0 ? m.redCards / m.played : 0;
-      return m;
-    })
-    .sort((a, b) => b.redCards - a.redCards || b.cardsPerMatch - a.cardsPerMatch);
+  (history || []).forEach(h => processRedCards(h));
+  if (tournament) processRedCards(tournament);
 
-  const squadDiscipline = Object.values(squadPlayers).sort((a, b) => b.count - a.count);
-
-  return { managerDiscipline, squadDiscipline };
+  return Object.values(data).sort((a, b) => b.redCards - a.redCards);
 }

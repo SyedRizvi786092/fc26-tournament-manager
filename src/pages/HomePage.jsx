@@ -27,7 +27,7 @@ export default function HomePage() {
     trades, managerRequests, linkedProfile, isManager, userNames,
     tradeBannerDismissed, setTradeBannerDismissed,
   } = useStore();
-  const { isAdmin, currentUser } = useAuth();
+  const { isAdmin, currentUser, updateUserDisplayName } = useAuth();
   const toast = useToast();
 
   const [showNotifications, setShowNotifications] = useState(false);

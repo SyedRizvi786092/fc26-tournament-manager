@@ -26,7 +26,7 @@ export default function SettingsPage() {
     userNames, modal, openModal, closeModal, linkedProfile, isManager,
     managerRequests,
   } = useStore();
-  const { isAdmin, signOut, currentUser } = useAuth();
+  const { isAdmin, signOut, currentUser, updateUserDisplayName } = useAuth();
   const toast = useToast();
 
   const [editProfileModal, setEditProfileModal] = useState(null);
@@ -68,6 +68,7 @@ export default function SettingsPage() {
       toast('Manager name updated across the app ✓', 'ok');
     } else {
       await saveUserName(currentUser.uid, newName);
+      await updateUserDisplayName(newName);
       toast('Display name updated ✓', 'ok');
     }
   };

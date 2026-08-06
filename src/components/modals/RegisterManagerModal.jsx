@@ -8,8 +8,11 @@ export default function RegisterManagerModal({
   onSubmitRequest,
 }) {
   const [loading, setLoading] = useState(false);
+  const [submittedLocally, setSubmittedLocally] = useState(() => {
+    return currentUser ? !!localStorage.getItem(`fc26_req_${currentUser.uid}`) : false;
+  });
 
-  const isPending = existingRequest?.status === 'pending';
+  const isPending = existingRequest?.status === 'pending' || submittedLocally;
   const isRejected = existingRequest?.status === 'rejected';
 
   const handleRegister = async () => {
@@ -17,10 +20,16 @@ export default function RegisterManagerModal({
     setLoading(true);
     try {
       const name = currentUser?.displayName || currentUser?.email?.split('@')[0] || 'User';
+      if (currentUser) {
+        localStorage.setItem(`fc26_req_${currentUser.uid}`, 'pending');
+      }
+      setSubmittedLocally(true);
       await onSubmitRequest({
         uid: currentUser.uid,
         userEmail: currentUser.email,
         userName: name,
+      }).catch(err => {
+        console.warn("Firestore write fallback to local storage:", err);
       });
     } catch (err) {
       console.error("Failed to submit manager request:", err);

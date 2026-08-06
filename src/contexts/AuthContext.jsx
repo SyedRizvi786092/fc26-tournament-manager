@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState } from 'react';
-import { onAuthStateChanged, signInWithPopup, signOut as firebaseSignOut } from 'firebase/auth';
+import { onAuthStateChanged, signInWithPopup, signOut as firebaseSignOut, updateProfile } from 'firebase/auth';
 import { auth, googleProvider } from '../firebase.js';
 import { getSettings, saveSettings } from '../services/firestoreService.js';
 
@@ -61,8 +61,14 @@ export function AuthProvider({ children }) {
    * auth primitives (currentUser, isAdmin), and the store provides isManager/linkedProfile.
    */
 
+  const updateUserDisplayName = async (newName) => {
+    if (!auth.currentUser) return;
+    await updateProfile(auth.currentUser, { displayName: newName }).catch(() => {});
+    setCurrentUser({ ...auth.currentUser, displayName: newName });
+  };
+
   return (
-    <AuthContext.Provider value={{ currentUser, isAdmin, loading, setupNeeded, signInWithGoogle, signOut, claimAdmin }}>
+    <AuthContext.Provider value={{ currentUser, isAdmin, loading, setupNeeded, signInWithGoogle, signOut, claimAdmin, updateUserDisplayName }}>
       {children}
     </AuthContext.Provider>
   );
