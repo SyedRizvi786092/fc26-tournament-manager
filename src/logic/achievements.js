@@ -130,6 +130,7 @@ export function getManagerLevel(totalXP) {
 
   const xpInCurrentLevel = totalXP - minLevelXP;
   const xpForNextLevel = maxLevelXP - minLevelXP + 1;
+  const xpRemainingForNextLevel = maxLevelXP === Infinity ? 0 : Math.max(0, (maxLevelXP + 1) - totalXP);
   const progress = Math.min(1, Math.max(0, xpInCurrentLevel / xpForNextLevel));
 
   return {
@@ -139,6 +140,7 @@ export function getManagerLevel(totalXP) {
     tierIndex,
     xpInCurrentLevel,
     xpForNextLevel,
+    xpRemainingForNextLevel,
     progress
   };
 }

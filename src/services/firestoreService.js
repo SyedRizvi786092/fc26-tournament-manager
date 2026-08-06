@@ -25,12 +25,19 @@ export const updateAdminPresence = (activeTournamentId, isEditing) =>
     }
   }, { merge: true });
 
-// ─── Per-User Cloud Theme Preferences ───────────────────────────────────────
+// ─── Per-User Cloud Preferences ─────────────────────────────────────────
 
 export const saveUserThemeAccent = (uid, themeAccent) =>
   setDoc(doc(db, 'config', 'settings'), {
     userThemes: {
       [uid]: themeAccent,
+    }
+  }, { merge: true });
+
+export const saveUserName = (uid, displayName) =>
+  setDoc(doc(db, 'config', 'settings'), {
+    userNames: {
+      [uid]: displayName,
     }
   }, { merge: true });
 
@@ -181,4 +188,30 @@ export const expireTrade = (tradeId) =>
 export const markTradeRead = (tradeId, uid) =>
   setDoc(doc(db, 'trades', tradeId), {
     [`readBy.${uid}`]: true,
+  }, { merge: true });
+
+// ─── Manager Registration Requests ──────────────────────────────────────────
+
+export const subscribeToManagerRequests = (callback) =>
+  onSnapshot(
+    query(collection(db, 'managerRequests'), orderBy('createdAt', 'desc')),
+    snapshot => callback(snapshot.docs.map(d => ({ id: d.id, ...d.data() })))
+  );
+
+export const sendManagerRequest = async (requestData) => {
+  const ref = doc(collection(db, 'managerRequests'));
+  const now = new Date().toISOString();
+  await setDoc(ref, {
+    id: ref.id,
+    ...requestData,
+    status: 'pending',
+    createdAt: now,
+  });
+  return ref.id;
+};
+
+export const resolveManagerRequest = (requestId, status) =>
+  setDoc(doc(db, 'managerRequests', requestId), {
+    status, // 'accepted' | 'rejected'
+    resolvedAt: new Date().toISOString(),
   }, { merge: true });

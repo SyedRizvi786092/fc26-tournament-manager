@@ -1,15 +1,23 @@
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link } from 'react';
 import { useMemo, useState } from 'react';
 import useStore from '../store/useStore.js';
 import { evaluateAllManagers, BADGE_CATALOG, TIER_META } from '../logic/achievements.js';
+import { createTradeProposal } from '../services/firestoreService.js';
+import { useToast } from '../contexts/ToastContext.jsx';
 import EmptyState from '../components/ui/EmptyState.jsx';
+import BadgeDetailsModal from '../components/modals/BadgeDetailsModal.jsx';
+import TradeProposalModal from '../components/modals/TradeProposalModal.jsx';
 
 const TIER_ORDER = ['bronze', 'silver', 'gold', 'platinum', 'diamond'];
 
 export default function ManagerProfilePage() {
   const { id } = useParams();
   const { history, tournament, profiles, linkedProfile, isManager } = useStore();
+  const toast = useToast();
+
   const [tierFilter, setTierFilter] = useState('all');
+  const [selectedBadgeModal, setSelectedBadgeModal] = useState(null);
+  const [showTradeModal, setShowTradeModal] = useState(false);
 
   const profile = useMemo(() => profiles.find(p => p.id === id), [profiles, id]);
   const evaluation = useMemo(() => {
@@ -33,7 +41,7 @@ export default function ManagerProfilePage() {
 
   const { level, stats, unlockedBadges, totalXP } = evaluation;
   const avatar = profile.avatar || '⚽';
-  
+
   const tierColors = ['#cd7f32', '#c0c0c0', '#ffd700', '#e5e4e2', '#b9f2ff'];
   const bannerColor = tierColors[Math.min(level.tierIndex, 4)];
 
@@ -44,6 +52,16 @@ export default function ManagerProfilePage() {
 
   const canProposeTrade = isManager && linkedProfile && linkedProfile.id !== id;
 
+  const handleProposeTrade = async (tradeData) => {
+    await createTradeProposal({
+      ...tradeData,
+      fromProfileId: linkedProfile.id,
+      fromManagerName: linkedProfile.managerName,
+    });
+    toast('Trade proposal sent! 📤', 'ok');
+    setShowTradeModal(false);
+  };
+
   return (
     <div className="profiles-page">
       <div className="profiles-hdr">
@@ -52,7 +70,7 @@ export default function ManagerProfilePage() {
       </div>
 
       <div className="profiles-body" style={{ maxWidth: 840, paddingTop: 20 }}>
-        
+
         {/* Banner */}
         <div style={{
           background: `linear-gradient(135deg, var(--bg) 0%, ${bannerColor}33 100%)`,
@@ -76,15 +94,15 @@ export default function ManagerProfilePage() {
           <div style={{ width: '100%', maxWidth: 400, marginTop: 12 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 4 }}>
               <span style={{ color: 'var(--text)' }}>XP: {totalXP}</span>
-              <span style={{ color: 'var(--text)' }}>Next: {level.xpForNextLevel}</span>
+              <span style={{ color: 'var(--text)' }}>Next: {level.xpRemainingForNextLevel}</span>
             </div>
             <div style={{ height: 8, background: 'var(--border)', borderRadius: 4, overflow: 'hidden' }}>
-              <div style={{ height: '100%', background: bannerColor, width: `${level.progress * 100}%` }} />
+              <div style={{ height: '100%', background: bannerColor, width: `${(level.progress || 0) * 100}%` }} />
             </div>
           </div>
           {canProposeTrade && (
             <div style={{ marginTop: 12 }}>
-              <button className="btn btn-primary">📤 Propose Trade</button>
+              <button className="btn btn-primary" onClick={() => setShowTradeModal(true)}>📤 Propose Trade</button>
             </div>
           )}
         </div>
@@ -101,27 +119,26 @@ export default function ManagerProfilePage() {
             <StatBox label="Red Cards" value={stats.totalRedCards} color="var(--red)" />
             <StatBox label="Titles" value={stats.titles} color="var(--gold)" />
             <StatBox label="Runner-Ups" value={stats.runnerUps} color="var(--t2)" />
-            <StatBox label="Shootouts" value={`${stats.shootoutsWon}W - ${stats.shootoutsLost}L`} />
             <StatBox label="Longest Win Streak" value={stats.longestWinStreak} color="var(--gold)" />
           </div>
         </div>
 
         {/* Teams Section */}
         <div className="setup-card" style={{ marginBottom: 24 }}>
-          <div className="setup-card-title">Manager's Teams</div>
+          <div className="setup-card-title">Teams</div>
           {profile.teams && profile.teams.length > 0 ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 12 }}>
               {profile.teams
                 .slice()
-                .sort((a, b) => (b.isFavorite ? 1 : 0) - (a.isFavorite ? 1 : 0))
+                .sort((a, b) => (b.id === profile.favoriteTeamId ? 1 : 0) - (a.id === profile.favoriteTeamId ? 1 : 0))
                 .map((t, i) => (
                   <div key={i} style={{ padding: 12, background: 'var(--code-bg)', borderRadius: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div style={{ fontWeight: 700 }}>
-                      {t.isFavorite && <span style={{ color: 'var(--gold)', marginRight: 6 }}>⭐</span>}
+                      {t.id === profile.favoriteTeamId && <span style={{ color: 'var(--gold)', marginRight: 6 }}>⭐</span>}
                       {t.clubName}
                     </div>
                     <div style={{ fontSize: 12, color: 'var(--text)' }}>
-                      {t.players ? t.players.length : 0} Players
+                      {t.squad ? t.squad.length : 0} Players
                     </div>
                   </div>
               ))}
@@ -144,26 +161,34 @@ export default function ManagerProfilePage() {
               </button>
             ))}
           </div>
-          
+
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: 12 }}>
             {filteredBadges.map(badge => {
               const isUnlocked = unlockedBadges.some(b => b.id === badge.id);
               const tierInfo = TIER_META[badge.tier];
 
               return (
-                <div key={badge.id} style={{
-                  background: 'var(--code-bg)',
-                  border: `1px solid ${isUnlocked ? tierInfo.color : 'var(--border)'}`,
-                  borderRadius: 8,
-                  padding: 12,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  gap: 8,
-                  opacity: isUnlocked ? 1 : 0.3,
-                  boxShadow: isUnlocked ? `0 0 8px ${tierInfo.color}33` : 'none',
-                  textAlign: 'center'
-                }}>
+                <div
+                  key={badge.id}
+                  onClick={() => setSelectedBadgeModal({ badge, isUnlocked })}
+                  style={{
+                    background: 'var(--code-bg)',
+                    border: `1px solid ${isUnlocked ? tierInfo.color : 'var(--border)'}`,
+                    borderRadius: 8,
+                    padding: 12,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: 8,
+                    opacity: isUnlocked ? 1 : 0.35,
+                    boxShadow: isUnlocked ? `0 0 8px ${tierInfo.color}33` : 'none',
+                    textAlign: 'center',
+                    cursor: 'pointer',
+                    transition: 'transform 0.15s ease, border-color 0.15s ease',
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.05)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; }}
+                >
                   <div style={{ fontSize: 32 }}>{badge.icon}</div>
                   <div style={{ fontWeight: 700, fontSize: 11, color: 'var(--text-h)' }}>{badge.name}</div>
                 </div>
@@ -173,6 +198,24 @@ export default function ManagerProfilePage() {
         </div>
 
       </div>
+
+      {/* Modals */}
+      {selectedBadgeModal && (
+        <BadgeDetailsModal
+          badge={selectedBadgeModal.badge}
+          isUnlocked={selectedBadgeModal.isUnlocked}
+          onClose={() => setSelectedBadgeModal(null)}
+        />
+      )}
+
+      {showTradeModal && (
+        <TradeProposalModal
+          profiles={profiles}
+          linkedProfile={linkedProfile}
+          onClose={() => setShowTradeModal(false)}
+          onPropose={handleProposeTrade}
+        />
+      )}
     </div>
   );
 }

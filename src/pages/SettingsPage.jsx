@@ -1,36 +1,40 @@
 import { useState, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import useStore from '../store/useStore.js';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { useToast } from '../contexts/ToastContext.jsx';
 import {
-  saveProfile, deleteProfile, saveUserThemeAccent,
-  linkManagerEmail, updateManagerCustomization,
-  batchUpdateHistory, saveTournament,
+  saveProfile, deleteProfile, saveUserThemeAccent, saveUserName,
+  updateManagerCustomization, sendManagerRequest,
 } from '../services/firestoreService.js';
 import { THEME_PRESETS, applyThemeAccent } from '../logic/theme.js';
 import { evaluateAllManagers, TIER_META } from '../logic/achievements.js';
+
 import EditProfileModal from '../components/modals/EditProfileModal.jsx';
 import TradeModal from '../components/modals/TradeModal.jsx';
 import ConfirmModal from '../components/modals/ConfirmModal.jsx';
+import EditNameModal from '../components/modals/EditNameModal.jsx';
+import ChangeAvatarModal from '../components/modals/ChangeAvatarModal.jsx';
+import ChangeThemeModal from '../components/modals/ChangeThemeModal.jsx';
+import RegisterManagerModal from '../components/modals/RegisterManagerModal.jsx';
 import EmptyState from '../components/ui/EmptyState.jsx';
 
-const AVATAR_OPTIONS = ['⚽', '🦁', '👑', '⚡', '🏆', '🦅', '🔥', '🎩', '🐺', '🦈', '💎', '🎯', '🛡️', '⭐', '🐉', '🦊'];
-
-function norm(name) { return (name || '').trim().toLowerCase(); }
-
 export default function SettingsPage() {
+  const navigate = useNavigate();
   const {
     profiles, history, tournament, themeAccent, setThemeAccent,
-    modal, openModal, closeModal, linkedProfile, isManager,
+    userNames, modal, openModal, closeModal, linkedProfile, isManager,
+    managerRequests,
   } = useStore();
   const { isAdmin, signOut, currentUser } = useAuth();
   const toast = useToast();
 
-  const [editModal, setEditModal] = useState(null);
+  const [editProfileModal, setEditProfileModal] = useState(null);
   const [showTradeModal, setShowTradeModal] = useState(false);
-  const [linkEmails, setLinkEmails] = useState({});
-  const [migrating, setMigrating] = useState(false);
+  const [showEditNameModal, setShowEditNameModal] = useState(false);
+  const [showAvatarModal, setShowAvatarModal] = useState(false);
+  const [showThemeModal, setShowThemeModal] = useState(false);
+  const [showRegisterModal, setShowRegisterModal] = useState(false);
 
   // Get achievement data for manager summary
   const managerData = useMemo(() => {
@@ -40,6 +44,45 @@ export default function SettingsPage() {
     results.forEach(r => { map[r.profileId] = r; });
     return map;
   }, [profiles, history, tournament]);
+
+  // Current display name
+  const currentDisplayName = (currentUser && userNames?.[currentUser.uid]) || currentUser?.displayName || (currentUser?.email ? currentUser.email.split('@')[0] : 'User');
+
+  // Current active theme name
+  const currentThemePreset = THEME_PRESETS.find(
+    p => p.hex.toLowerCase() === (themeAccent || '#00c896').toLowerCase()
+  ) || THEME_PRESETS[0];
+
+  // User's manager registration request
+  const userRequest = currentUser
+    ? managerRequests.find(r => r.uid === currentUser.uid)
+    : null;
+
+  // Handlers
+  const handleSaveName = async (newName) => {
+    if (!currentUser) return;
+    await saveUserName(currentUser.uid, newName);
+    toast('Display name updated ✓', 'ok');
+  };
+
+  const handleSaveAvatar = async (newAvatar) => {
+    if (!linkedProfile) return;
+    await updateManagerCustomization(linkedProfile.id, { avatar: newAvatar });
+    toast(`Avatar updated to ${newAvatar} ✓`, 'ok');
+  };
+
+  const handleThemeChange = async (preset) => {
+    if (!currentUser) return;
+    setThemeAccent(preset.hex);
+    applyThemeAccent(preset.hex);
+    localStorage.setItem(`fc26_theme_${currentUser.uid}`, preset.hex);
+    toast(`Theme accent updated to ${preset.name} ✓`, 'ok');
+    try {
+      await saveUserThemeAccent(currentUser.uid, preset.hex);
+    } catch (err) {
+      console.error('Failed to sync user theme settings to cloud:', err);
+    }
+  };
 
   const handleSaveProfile = async (profile) => {
     await saveProfile(profile);
@@ -64,19 +107,6 @@ export default function SettingsPage() {
     toast(`Traded "${playerA}" ⇄ "${playerB}" successfully! ✓`, 'ok');
   };
 
-  const handleThemeChange = async (preset) => {
-    if (!currentUser) return;
-    setThemeAccent(preset.hex);
-    applyThemeAccent(preset.hex);
-    localStorage.setItem(`fc26_theme_${currentUser.uid}`, preset.hex);
-    toast(`Theme accent updated to ${preset.name} ✓`, 'ok');
-    try {
-      await saveUserThemeAccent(currentUser.uid, preset.hex);
-    } catch (err) {
-      console.error('Failed to sync user theme settings to cloud:', err);
-    }
-  };
-
   const handleSignOut = () => {
     openModal({
       type: 'confirm',
@@ -86,103 +116,18 @@ export default function SettingsPage() {
     });
   };
 
+  const handleSendManagerRequest = async (requestData) => {
+    await sendManagerRequest(requestData);
+    toast('Registration request submitted! 📩', 'ok');
+  };
+
   const openProfileModal = (p) =>
-    setEditModal({
+    setEditProfileModal({
       type:        'editProfile',
       profileId:   p?.id          ?? null,
       managerName: p?.managerName ?? '',
       teams:       p?.teams       ? [...p.teams] : [],
     });
-
-  // ─── Admin: Link Email ─────────────────────────────────────────────────
-  const handleLinkEmail = async (profile) => {
-    const email = (linkEmails[profile.id] || '').trim();
-    if (!email) { toast('Enter an email address', 'err'); return; }
-
-    // Uniqueness check
-    const existingProfile = profiles.find(
-      p => p.id !== profile.id && p.linkedEmail && p.linkedEmail.trim().toLowerCase() === email.toLowerCase()
-    );
-    if (existingProfile) {
-      toast(`Email already linked to ${existingProfile.managerName}!`, 'err');
-      return;
-    }
-
-    await linkManagerEmail(profile.id, email);
-    setLinkEmails(prev => ({ ...prev, [profile.id]: '' }));
-    toast(`${profile.managerName} linked to ${email} ✓`, 'ok');
-  };
-
-  // ─── Admin: Migrate History ──────────────────────────────────────────────
-  const handleMigrateHistory = async () => {
-    setMigrating(true);
-    try {
-      let matched = 0, total = 0;
-      const updatedEntries = [];
-
-      for (const entry of history) {
-        let modified = false;
-        const updatedPlayers = (entry.players || []).map(player => {
-          total++;
-          if (player.profileId) { matched++; return player; } // already tagged
-          const profile = profiles.find(p => norm(p.managerName) === norm(player.name));
-          if (profile) {
-            matched++;
-            modified = true;
-            return { ...player, profileId: profile.id };
-          }
-          return player;
-        });
-        if (modified) {
-          updatedEntries.push({ ...entry, players: updatedPlayers });
-        }
-      }
-
-      // Also migrate active tournament
-      if (tournament) {
-        let modified = false;
-        const updatedPlayers = (tournament.players || []).map(player => {
-          total++;
-          if (player.profileId) { matched++; return player; }
-          const profile = profiles.find(p => norm(p.managerName) === norm(player.name));
-          if (profile) {
-            matched++;
-            modified = true;
-            return { ...player, profileId: profile.id };
-          }
-          return player;
-        });
-        if (modified) {
-          await saveTournament({ ...tournament, players: updatedPlayers });
-        }
-      }
-
-      if (updatedEntries.length > 0) {
-        await batchUpdateHistory(updatedEntries);
-      }
-
-      toast(`Migration complete! Matched ${matched}/${total} player entries across ${history.length} tournaments. ✓`, 'ok');
-    } catch (err) {
-      console.error('Migration failed:', err);
-      toast('Migration failed. See console.', 'err');
-    } finally {
-      setMigrating(false);
-    }
-  };
-
-  // ─── Manager: Avatar / Favorite Team ────────────────────────────────────
-  const handleAvatarChange = async (emoji) => {
-    if (!linkedProfile) return;
-    await updateManagerCustomization(linkedProfile.id, { avatar: emoji });
-    toast(`Avatar updated to ${emoji} ✓`, 'ok');
-  };
-
-  const handleFavoriteTeam = async (teamId) => {
-    if (!linkedProfile) return;
-    const newFav = linkedProfile.favoriteTeamId === teamId ? null : teamId;
-    await updateManagerCustomization(linkedProfile.id, { favoriteTeamId: newFav });
-    toast(newFav ? 'Favorite team set ⭐' : 'Favorite team cleared', 'ok');
-  };
 
   return (
     <div className="profiles-page">
@@ -191,245 +136,229 @@ export default function SettingsPage() {
         <span className="profiles-hdr-title">⚙️ Settings</span>
       </div>
 
-      <div className="profiles-body">
-        {/* Account info + Sign Out */}
+      <div className="profiles-body" style={{ maxWidth: 720 }}>
+        {/* Flat Single Card for Main Settings Items */}
         <div className="setup-card">
-          <div className="setup-card-title">👤 Account</div>
-          <div className="file-setting">
-            <div className="fsr-info">
-              <div className="fsr-label">{currentUser?.email}</div>
-              <div className="fsr-sub">
-                {isAdmin ? '👑 Admin — full access' : isManager ? '🎮 Manager — limited access' : '👁️ Viewer — read-only access'}
-              </div>
+
+          {/* 1. Google Account */}
+          <div className="setting-row">
+            <div className="setting-info">
+              <div className="setting-label">Google Account</div>
+              <div className="setting-value">{currentUser?.email}</div>
             </div>
-            <div className="fsr-actions">
+            <div className="setting-action">
               <button className="btn btn-sm btn-danger" onClick={handleSignOut}>Sign Out</button>
             </div>
           </div>
-        </div>
 
-        {/* 🎮 Manager Customization (only for linked managers) */}
-        {(isManager || isAdmin) && linkedProfile && (
-          <div className="setup-card">
-            <div className="setup-card-title">🎮 Manager Customization</div>
+          <div className="setting-divider" />
 
-            {/* Avatar Emoji Selector */}
-            <div style={{ marginBottom: 16 }}>
-              <label style={{ fontSize: 13, color: 'var(--t2)', marginBottom: 8, display: 'block' }}>Avatar Emoji</label>
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                {AVATAR_OPTIONS.map(emoji => (
-                  <button
-                    key={emoji}
-                    className={`btn btn-sm ${linkedProfile.avatar === emoji ? 'btn-primary' : 'btn-secondary'}`}
-                    style={{ fontSize: 20, padding: '6px 10px', minWidth: 42 }}
-                    onClick={() => handleAvatarChange(emoji)}
-                  >
-                    {emoji}
-                  </button>
-                ))}
+          {/* 2. Name */}
+          <div className="setting-row">
+            <div className="setting-info">
+              <div className="setting-label">Name</div>
+              <div className="setting-value">{currentDisplayName}</div>
+            </div>
+            <div className="setting-action">
+              <button className="btn btn-sm btn-secondary" onClick={() => setShowEditNameModal(true)}>✏️ Edit</button>
+            </div>
+          </div>
+
+          <div className="setting-divider" />
+
+          {/* 3. Manager Profile */}
+          <div className="setting-row" style={{ flexDirection: 'column', alignItems: 'stretch' }}>
+            <div className="setting-label" style={{ marginBottom: 10 }}>Manager Profile</div>
+            {isManager && linkedProfile ? (
+              <div>
+                {/* Manager Card */}
+                {(() => {
+                  const md = managerData[linkedProfile.id];
+                  const tierColors = ['#cd7f32', '#c0c0c0', '#ffd700', '#e5e4e2', '#b9f2ff'];
+                  const bannerColor = md ? tierColors[Math.min(md.level?.tierIndex || 0, 4)] : 'var(--accent)';
+                  const clubLabel = linkedProfile.teams?.length === 1
+                    ? linkedProfile.teams[0].clubName
+                    : linkedProfile.teams?.length > 1
+                    ? `${linkedProfile.teams.length} teams`
+                    : 'No teams';
+
+                  return (
+                    <div style={{
+                      background: 'var(--code-bg)',
+                      border: '1px solid var(--border)',
+                      borderRadius: 10,
+                      padding: 16,
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                        <div style={{ fontSize: 36, lineHeight: 1 }}>{linkedProfile.avatar || '⚽'}</div>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                            <span style={{ fontWeight: 800, fontSize: 16 }}>{linkedProfile.managerName}</span>
+                            {md && (
+                              <span style={{ fontSize: 12, fontWeight: 700, color: bannerColor, background: `${bannerColor}22`, padding: '2px 8px', borderRadius: 10 }}>
+                                {md.level?.icon} Lv.{md.level?.level} · {md.level?.title}
+                              </span>
+                            )}
+                          </div>
+                          <div style={{ fontSize: 13, color: 'var(--t2)', marginTop: 2 }}>{clubLabel}</div>
+                        </div>
+                      </div>
+
+                      {/* Progress bar */}
+                      {md && (
+                        <div style={{ marginTop: 12 }}>
+                          <div style={{ height: 8, background: 'var(--bg3)', borderRadius: 4, overflow: 'hidden' }}>
+                            <div style={{ height: '100%', background: bannerColor, width: `${(md.level?.progress || 0) * 100}%`, transition: 'width 0.4s ease' }} />
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--t3)', marginTop: 4 }}>
+                            <span>{md.totalXP} XP</span>
+                            <span>🏅 {md.unlockedBadges?.length || 0} badges</span>
+                          </div>
+                        </div>
+                      )}
+
+                      <div style={{ marginTop: 12, textAlign: 'right' }}>
+                        <button
+                          className="btn btn-sm btn-secondary"
+                          onClick={() => navigate(`/profile/${linkedProfile.id}`)}
+                          style={{ fontSize: 13 }}
+                        >
+                          See full profile →
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+            ) : (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ fontSize: 13, color: 'var(--t2)' }}>
+                  {userRequest?.status === 'pending'
+                    ? '⏳ Manager registration request is pending admin approval'
+                    : 'You are currently logged in as a Viewer.'}
+                </div>
+                <button
+                  className="btn btn-sm btn-primary"
+                  onClick={() => setShowRegisterModal(true)}
+                >
+                  Register as Manager
+                </button>
+              </div>
+            )}
+          </div>
+
+          <div className="setting-divider" />
+
+          {/* 4. Avatar Emoji */}
+          <div className="setting-row">
+            <div className="setting-info">
+              <div className="setting-label">Avatar Emoji</div>
+              <div className="setting-value" style={{ fontSize: 22 }}>
+                {linkedProfile?.avatar || '⚽'}
               </div>
             </div>
+            <div className="setting-action">
+              <button
+                className="btn btn-sm btn-secondary"
+                onClick={() => setShowAvatarModal(true)}
+                disabled={!isManager || !linkedProfile}
+              >
+                Change
+              </button>
+            </div>
+          </div>
 
-            {/* Favorite Team Marker */}
-            {linkedProfile.teams?.length > 1 && (
-              <div>
-                <label style={{ fontSize: 13, color: 'var(--t2)', marginBottom: 8, display: 'block' }}>⭐ Favorite Team</label>
-                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                  {linkedProfile.teams.map(team => (
-                    <button
-                      key={team.id}
-                      className={`btn btn-sm ${linkedProfile.favoriteTeamId === team.id ? 'btn-primary' : 'btn-secondary'}`}
-                      onClick={() => handleFavoriteTeam(team.id)}
-                    >
-                      {linkedProfile.favoriteTeamId === team.id && '⭐ '}{team.clubName}
-                    </button>
-                  ))}
-                </div>
+          <div className="setting-divider" />
+
+          {/* 5. App Theme */}
+          <div className="setting-row">
+            <div className="setting-info">
+              <div className="setting-label">App Theme</div>
+              <div className="setting-value" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ width: 14, height: 14, borderRadius: '50%', background: currentThemePreset.hex, display: 'inline-block', border: '1px solid rgba(255,255,255,.3)' }} />
+                <span>{currentThemePreset.name}</span>
               </div>
-            )}
-
-            {/* Manager Level Summary */}
-            {managerData[linkedProfile.id] && (() => {
-              const md = managerData[linkedProfile.id];
-              const tier = TIER_META[md.level?.tierIndex !== undefined ? ['bronze','silver','gold','platinum','diamond'][md.level.tierIndex] || 'bronze' : 'bronze'];
-              return (
-                <div style={{ marginTop: 16, padding: 12, background: 'var(--bg2)', borderRadius: 10 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-                    <span style={{ fontSize: 22 }}>{md.level?.icon}</span>
-                    <span style={{ fontWeight: 700 }}>Lv. {md.level?.level}</span>
-                    <span style={{ color: 'var(--t2)', fontSize: 13 }}>{md.level?.title}</span>
-                  </div>
-                  <div style={{ background: 'var(--bg3)', borderRadius: 6, height: 8, overflow: 'hidden' }}>
-                    <div style={{ width: `${(md.level?.progress || 0) * 100}%`, height: '100%', background: 'var(--accent)', borderRadius: 6, transition: 'width 0.5s ease' }} />
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: 'var(--t2)', marginTop: 4 }}>
-                    <span>{md.totalXP} XP</span>
-                    <span>🏅 {md.unlockedBadges?.length || 0}/40 badges</span>
-                  </div>
-                </div>
-              );
-            })()}
+            </div>
+            <div className="setting-action">
+              <button className="btn btn-sm btn-secondary" onClick={() => setShowThemeModal(true)}>Change</button>
+            </div>
           </div>
-        )}
 
-        {/* 🎨 Per-User UI Theme Accent Switcher */}
-        <div className="setup-card">
-          <div className="setup-card-title">🎨 My Theme Accent</div>
-          <p style={{ fontSize: 13, color: 'var(--t2)', marginBottom: 14 }}>
-            Choose your personal accent color preference. Saved to your cloud account so it follows you on all your devices.
-          </p>
-
-          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-            {THEME_PRESETS.map(preset => {
-              const isActive = (themeAccent || '#00c896').toLowerCase() === preset.hex.toLowerCase();
-              return (
-                <button
-                  key={preset.id}
-                  type="button"
-                  className={`btn btn-sm ${isActive ? 'btn-primary' : 'btn-secondary'}`}
-                  style={{ gap: 8, padding: '8px 14px', fontSize: 13 }}
-                  onClick={() => handleThemeChange(preset)}
-                >
-                  <span style={{ width: 14, height: 14, borderRadius: '50%', background: preset.hex, display: 'inline-block', border: '1px solid rgba(255,255,255,.3)' }} />
-                  {preset.name} {isActive ? '✓' : ''}
-                </button>
-              );
-            })}
-          </div>
         </div>
 
-        {/* 🔗 Admin: Link Manager Accounts */}
+        {/* 7. Registered Managers (ADMIN ONLY) */}
         {isAdmin && (
-          <div className="setup-card">
-            <div className="setup-card-title">🔗 Link Manager Accounts</div>
-            <p style={{ fontSize: 13, color: 'var(--t2)', marginBottom: 14 }}>
-              Pair a Google email address to each manager profile to grant them Manager privileges (avatar, favorite team, trade proposals).
-            </p>
-
-            {profiles.length ? profiles.map(p => (
-              <div key={p.id} className="file-setting" style={{ marginBottom: 10 }}>
-                <div className="fsr-info" style={{ minWidth: 120 }}>
-                  <div className="fsr-label">{p.avatar || '⚽'} {p.managerName}</div>
-                  {p.linkedEmail && (
-                    <div className="fsr-sub" style={{ color: 'var(--accent)' }}>✓ {p.linkedEmail}</div>
-                  )}
-                </div>
-                <div className="fsr-actions" style={{ display: 'flex', gap: 8, alignItems: 'center', flex: 1 }}>
-                  <input
-                    type="email"
-                    placeholder="Google email"
-                    value={linkEmails[p.id] ?? (p.linkedEmail || '')}
-                    onChange={e => setLinkEmails(prev => ({ ...prev, [p.id]: e.target.value }))}
-                    style={{ flex: 1, minWidth: 160 }}
-                  />
-                  <button className="btn btn-sm btn-primary" onClick={() => handleLinkEmail(p)}>
-                    {p.linkedEmail ? 'Update' : 'Link'}
-                  </button>
-                </div>
-              </div>
-            )) : (
-              <p style={{ fontSize: 13, color: 'var(--t2)' }}>Create manager profiles first.</p>
-            )}
-          </div>
-        )}
-
-        {/* 🔄 Admin: History Migration */}
-        {isAdmin && (
-          <div className="setup-card">
-            <div className="setup-card-title">🔄 Migrate History Data</div>
-            <p style={{ fontSize: 13, color: 'var(--t2)', marginBottom: 14 }}>
-              One-time migration: Tags all historical tournament player entries with their saved profile IDs.
-              This enables the achievement engine to accurately track stats across tournaments.
-            </p>
-            <button
-              className="btn btn-sm btn-primary"
-              onClick={handleMigrateHistory}
-              disabled={migrating || !profiles.length}
-            >
-              {migrating ? 'Migrating…' : '🔄 Run Migration'}
-            </button>
-          </div>
-        )}
-
-        {/* Saved Teams */}
-        <div className="setup-card">
-          <div className="setup-card-title" style={{ justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
-            <span>👥 Saved Profiles ({profiles.length})</span>
-            {isAdmin && (
+          <div className="setup-card" style={{ marginTop: 24 }}>
+            <div className="setup-card-title" style={{ justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
+              <span>👥 Registered Managers ({profiles.length})</span>
               <div style={{ display: 'flex', gap: 8, marginLeft: 'auto' }}>
                 <button
                   className="btn btn-sm btn-secondary"
                   onClick={() => setShowTradeModal(true)}
-                  disabled={profiles.length < 1}
+                  disabled={profiles.length < 2}
                   style={{ textTransform: 'none', letterSpacing: 0, fontSize: 13 }}
                 >
                   🔄 Trade Players
                 </button>
-                <button
-                  className="btn btn-sm btn-primary"
-                  onClick={() => openProfileModal(null)}
-                  style={{ textTransform: 'none', letterSpacing: 0, fontSize: 13 }}
-                >
-                  + New Profile
-                </button>
               </div>
+            </div>
+
+            {profiles.length ? (
+              <div className="registered-managers-list">
+                {profiles.map(p => {
+                  const teamCount  = (p.teams || []).length;
+                  const clubLabel  = teamCount === 0 ? 'No teams'
+                                   : teamCount === 1 ? p.teams[0].clubName
+                                   : `${teamCount} teams`;
+                  const md = managerData[p.id];
+                  return (
+                    <div key={p.id} className="manager-card-redesigned">
+                      <div className="mcr-avatar">{p.avatar || '⚽'}</div>
+                      <div className="mcr-details">
+                        <div className="mcr-header">
+                          <Link to={`/profile/${p.id}`} className="mcr-name">
+                            {p.managerName}
+                          </Link>
+                          {md && (
+                            <span className="mcr-level">
+                              {md.level?.icon} Lv.{md.level?.level}
+                            </span>
+                          )}
+                        </div>
+                        <div className="mcr-club">{clubLabel}</div>
+                        {p.linkedEmail && (
+                          <div className="mcr-email">✓ {p.linkedEmail}</div>
+                        )}
+                      </div>
+                      <div className="mcr-actions">
+                        <button className="btn btn-sm btn-secondary" onClick={() => openProfileModal(p)}>
+                          ✏️ Edit
+                        </button>
+                        <button className="btn btn-sm btn-danger btn-icon" onClick={() => handleDeleteProfile(p.id)} title="Delete manager">
+                          🗑️
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <EmptyState icon="👤" title="No Managers Registered Yet" message="Manager profiles will appear here once registered." />
             )}
           </div>
-
-          {profiles.length ? profiles.map(p => {
-            const teamCount  = (p.teams || []).length;
-            const clubLabel  = teamCount === 0 ? 'No teams'
-                             : teamCount === 1 ? p.teams[0].clubName
-                             : `${teamCount} teams`;
-            const md = managerData[p.id];
-            return (
-              <div key={p.id} className="profile-card">
-                <div className="profile-avatar">{p.avatar || '⚽'}</div>
-                <div className="profile-info">
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <Link to={`/profile/${p.id}`} className="profile-name" style={{ color: 'var(--t1)', textDecoration: 'none' }}>
-                      {p.managerName}
-                    </Link>
-                    {md && (
-                      <span style={{ fontSize: 12, color: 'var(--t2)' }}>
-                        {md.level?.icon} Lv.{md.level?.level}
-                      </span>
-                    )}
-                  </div>
-                  <div className="profile-club">{clubLabel}</div>
-                </div>
-                <div className="profile-actions">
-                  {isAdmin ? (
-                    <>
-                      <button className="btn btn-sm btn-secondary" onClick={() => openProfileModal(p)}>
-                        ✏️ Edit
-                      </button>
-                      <button className="btn btn-sm btn-danger btn-icon"
-                        onClick={() => handleDeleteProfile(p.id)} title="Delete team">🗑️</button>
-                    </>
-                  ) : (
-                    <button className="btn btn-sm btn-secondary" onClick={() => openProfileModal(p)}>
-                      📋 Teams
-                    </button>
-                  )}
-                </div>
-              </div>
-            );
-          }) : (
-            <EmptyState icon="👤" title="No Teams Saved Yet"
-              message="Create team profiles here first. You can then select them when setting up a tournament." />
-          )}
-        </div>
+        )}
       </div>
 
-      {editModal && (
+      {/* Modals */}
+      {editProfileModal && (
         <EditProfileModal
-          modal={editModal}
+          modal={editProfileModal}
           readOnly={!isAdmin}
-          onClose={() => setEditModal(null)}
+          onClose={() => setEditProfileModal(null)}
           onSave={handleSaveProfile}
         />
       )}
+
       {showTradeModal && (
         <TradeModal
           profiles={profiles}
@@ -437,6 +366,40 @@ export default function SettingsPage() {
           onTrade={handleExecuteTrade}
         />
       )}
+
+      {showEditNameModal && (
+        <EditNameModal
+          currentName={currentDisplayName}
+          onClose={() => setShowEditNameModal(false)}
+          onSave={handleSaveName}
+        />
+      )}
+
+      {showAvatarModal && (
+        <ChangeAvatarModal
+          currentAvatar={linkedProfile?.avatar}
+          onClose={() => setShowAvatarModal(false)}
+          onSave={handleSaveAvatar}
+        />
+      )}
+
+      {showThemeModal && (
+        <ChangeThemeModal
+          currentHex={themeAccent}
+          onClose={() => setShowThemeModal(false)}
+          onSelectPreset={handleThemeChange}
+        />
+      )}
+
+      {showRegisterModal && (
+        <RegisterManagerModal
+          currentUser={currentUser}
+          existingRequest={userRequest}
+          onClose={() => setShowRegisterModal(false)}
+          onSubmitRequest={handleSendManagerRequest}
+        />
+      )}
+
       {modal?.type === 'confirm' && <ConfirmModal modal={modal} onClose={closeModal} />}
     </div>
   );

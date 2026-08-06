@@ -13,10 +13,14 @@ const useStore = create((set, get) => ({
   profiles:      [],    // profiles collection
   adminPresence: null,  // { activeTournamentId, isEditing } from config/settings
   themeAccent:   '#00c896', // accent color hex from config/settings
+  userNames:     {},    // custom display names map { [uid]: displayName }
   dataReady:     false, // true once tournament + history listeners have each fired once
 
   // ─── Trades (synced from Firestore) ────────────────────────────────────
   trades: [],           // trades collection (all statuses)
+
+  // ─── Manager Registration Requests (synced from Firestore) ─────────────
+  managerRequests: [],  // managerRequests collection
 
   // ─── Manager Profile Linking ───────────────────────────────────────────
   linkedProfile:  null, // the profile object linked to the current user (via email)
@@ -47,14 +51,16 @@ const useStore = create((set, get) => ({
   setHistoryTab:  (tab)  => set({ historyTab: tab }),
 
   // ─── Actions: Data Setters ───────────────────────────────────────────────
-  setTournament:    (t) => set({ tournament: t }),
-  setHistory:       (h) => set({ history: h }),
-  setProfiles:      (p) => set({ profiles: p }),
-  setAdminPresence: (p) => set({ adminPresence: p }),
-  setThemeAccent:   (c) => set({ themeAccent: c }),
-  setDataReady:     (v) => set({ dataReady: v }),
-  setTrades:        (t) => set({ trades: t }),
-  setLinkedProfile: (p) => set({ linkedProfile: p, isManager: !!p }),
+  setTournament:      (t) => set({ tournament: t }),
+  setHistory:         (h) => set({ history: h }),
+  setProfiles:        (p) => set({ profiles: p }),
+  setAdminPresence:   (p) => set({ adminPresence: p }),
+  setThemeAccent:     (c) => set({ themeAccent: c }),
+  setUserNames:       (u) => set({ userNames: u || {} }),
+  setDataReady:       (v) => set({ dataReady: v }),
+  setTrades:          (t) => set({ trades: t }),
+  setManagerRequests: (r) => set({ managerRequests: r }),
+  setLinkedProfile:   (p) => set({ linkedProfile: p, isManager: !!p }),
   setTradeBannerDismissed: (v) => set({ tradeBannerDismissed: v }),
 
   // ─── Actions: Modal ──────────────────────────────────────────────────────

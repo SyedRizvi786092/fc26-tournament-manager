@@ -59,6 +59,8 @@ export default function HallOfFamePage() {
                   {evaluations.map((ev, i) => {
                     const p = profiles.find(pr => pr.id === ev.profileId);
                     const avatar = p?.avatar || '⚽';
+                    const tierColors = ['#cd7f32', '#c0c0c0', '#ffd700', '#e5e4e2', '#b9f2ff'];
+                    const bannerColor = tierColors[Math.min(ev.level.tierIndex || 0, 4)];
                     return (
                       <tr key={ev.profileId}>
                         <td className="st-pos">{i + 1}</td>
@@ -76,16 +78,16 @@ export default function HallOfFamePage() {
                         </td>
                         <td>
                           <div style={{ display: 'flex', flexDirection: 'column', gap: 4, padding: '0 8px' }}>
-                            <div style={{ height: 6, background: 'var(--border)', borderRadius: 3, overflow: 'hidden' }}>
-                              <div style={{ height: '100%', background: 'var(--accent)', width: `${ev.level.progress * 100}%` }} />
+                            <div style={{ height: 8, background: 'var(--bg3)', borderRadius: 4, overflow: 'hidden' }}>
+                              <div style={{ height: '100%', background: bannerColor, width: `${(ev.level.progress || 0) * 100}%`, transition: 'width 0.4s ease' }} />
                             </div>
                             <div style={{ fontSize: 11, color: 'var(--t3)', textAlign: 'right' }}>
                               {ev.totalXP} XP
                             </div>
                           </div>
                         </td>
-                        <td style={{ fontWeight: 600 }}>🏅 {ev.unlockedBadges.length}/{BADGE_CATALOG.length}</td>
-                        <td style={{ fontWeight: 800, color: 'var(--gold)' }}>🏆 x{ev.stats.titles}</td>
+                        <td style={{ fontWeight: 600 }}>🏅 {ev.unlockedBadges.length}</td>
+                        <td style={{ fontWeight: 800, color: 'var(--gold)' }}>🏆 {ev.stats.titles}</td>
                       </tr>
                     );
                   })}

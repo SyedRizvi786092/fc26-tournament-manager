@@ -7,6 +7,7 @@ import {
   subscribeToProfiles,
   subscribeToSettings,
   subscribeToTrades,
+  subscribeToManagerRequests,
   expireTrade,
 } from '../services/firestoreService.js';
 import { migrateProfileShape } from '../logic/migrateProfile.js';
@@ -20,7 +21,8 @@ import { applyThemeAccent } from '../logic/theme.js';
 export function useLiveData() {
   const {
     setTournament, setHistory, setProfiles, setAdminPresence,
-    setThemeAccent, setDataReady, setTrades, setLinkedProfile,
+    setThemeAccent, setUserNames, setDataReady, setTrades,
+    setManagerRequests, setLinkedProfile,
   } = useStore();
   const { currentUser } = useAuth();
 
@@ -82,6 +84,9 @@ export function useLiveData() {
 
     const unsubS = subscribeToSettings(settings => {
       setAdminPresence(settings?.adminPresence || null);
+      if (settings?.userNames) {
+        setUserNames(settings.userNames);
+      }
 
       // Real-time sync user's personal cloud theme accent across all devices logged into this account
       if (currentUser && settings?.userThemes?.[currentUser.uid]) {
@@ -103,6 +108,11 @@ export function useLiveData() {
       setTrades(trades);
     });
 
-    return () => { unsubT(); unsubH(); unsubP(); unsubS(); unsubTr(); };
-  }, [currentUser, setTournament, setHistory, setProfiles, setAdminPresence, setThemeAccent, setDataReady, setTrades, setLinkedProfile]);
+    // Subscribe to manager registration requests
+    const unsubMR = subscribeToManagerRequests(requests => {
+      setManagerRequests(requests);
+    });
+
+    return () => { unsubT(); unsubH(); unsubP(); unsubS(); unsubTr(); unsubMR(); };
+  }, [currentUser, setTournament, setHistory, setProfiles, setAdminPresence, setThemeAccent, setUserNames, setDataReady, setTrades, setManagerRequests, setLinkedProfile]);
 }

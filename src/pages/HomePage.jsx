@@ -8,11 +8,12 @@ import { generateFixtures } from '../logic/fixtures.js';
 import {
   saveTournament, deleteFromHistory, clearActiveTournament,
   updateAdminPresence, acceptTrade, rejectTrade, cancelTrade, markTradeRead,
-  saveProfile,
+  saveProfile, sendManagerRequest, resolveManagerRequest,
 } from '../services/firestoreService.js';
 import PlayerSetupCard from '../components/setup/PlayerSetupCard.jsx';
 import ConfirmModal from '../components/modals/ConfirmModal.jsx';
 import NotificationsModal from '../components/modals/NotificationsModal.jsx';
+import RegisterManagerModal from '../components/modals/RegisterManagerModal.jsx';
 import EmptyState from '../components/ui/EmptyState.jsx';
 import Badge from '../components/ui/Badge.jsx';
 import { useEffect } from 'react';
@@ -22,12 +23,13 @@ export default function HomePage() {
   const {
     setup, setSetup, resetSetup, history, profiles, tournament, dataReady,
     setView, adminPresence, modal, openModal, closeModal,
-    trades, linkedProfile, isManager, tradeBannerDismissed, setTradeBannerDismissed,
+    trades, managerRequests, linkedProfile, isManager, tradeBannerDismissed, setTradeBannerDismissed,
   } = useStore();
   const { isAdmin, currentUser } = useAuth();
   const toast = useToast();
 
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showRegisterModal, setShowRegisterModal] = useState(false);
 
   // Set admin presence to paused when on Home Hub
   useEffect(() => {
@@ -209,12 +211,40 @@ export default function HomePage() {
       }).length
     : 0;
 
+  const handleSendManagerRequest = async (requestData) => {
+    await sendManagerRequest(requestData);
+    toast('Registration request submitted! 📩', 'ok');
+  };
+
+  // Find existing request for current user
+  const userRequest = currentUser
+    ? managerRequests.find(r => r.uid === currentUser.uid)
+    : null;
+
   return (
     <div id="setup-screen">
+      {/* ... header ... */}
       <div className="setup-hero">
         <div className="setup-icon">⚽</div>
         <h1>FC 26 <span>Tournament</span> Manager</h1>
         <p>Real-time tournament tracking &amp; standings</p>
+
+        {/* Top-left profile icon button */}
+        <div className="home-top-left-actions">
+          {isManager && linkedProfile ? (
+            <Link to={`/profile/${linkedProfile.id}`} className="icon-btn" title="My Profile">
+              {linkedProfile.avatar || '👤'}
+            </Link>
+          ) : (
+            <button
+              className="icon-btn"
+              onClick={() => setShowRegisterModal(true)}
+              title="Register as Manager"
+            >
+              👤
+            </button>
+          )}
+        </div>
 
         {/* Top-right action icons */}
         <div className="home-top-actions">
@@ -377,9 +407,11 @@ export default function HomePage() {
       {showNotifications && (
         <NotificationsModal
           trades={trades}
+          managerRequests={managerRequests}
           linkedProfile={linkedProfile}
           profiles={profiles}
           currentUser={currentUser}
+          isAdmin={isAdmin}
           onClose={() => setShowNotifications(false)}
           onAcceptTrade={handleAcceptTrade}
           onRejectTrade={handleRejectTrade}
@@ -387,6 +419,16 @@ export default function HomePage() {
           onMarkRead={handleMarkRead}
         />
       )}
+
+      {showRegisterModal && (
+        <RegisterManagerModal
+          currentUser={currentUser}
+          existingRequest={userRequest}
+          onClose={() => setShowRegisterModal(false)}
+          onSubmitRequest={handleSendManagerRequest}
+        />
+      )}
     </div>
   );
 }
+
