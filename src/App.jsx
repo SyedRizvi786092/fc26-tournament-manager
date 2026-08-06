@@ -2,7 +2,6 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './contexts/AuthContext.jsx';
 import { useLiveData } from './hooks/useLiveData.js';
 import AuthPage from './pages/AuthPage.jsx';
-import AdminSetupPage from './pages/AdminSetupPage.jsx';
 import HomePage from './pages/HomePage.jsx';
 import HistoryPage from './pages/HistoryPage.jsx';
 import HistoryDetailsPage from './pages/HistoryDetailsPage.jsx';
@@ -32,7 +31,7 @@ function AppRoutes() {
 }
 
 export default function App() {
-  const { currentUser, loading, setupNeeded } = useAuth();
+  const { currentUser, loading } = useAuth();
 
   if (loading) {
     return (
@@ -45,8 +44,7 @@ export default function App() {
     );
   }
 
-  if (!currentUser)  return <AuthPage />;
-  if (setupNeeded)   return <AdminSetupPage />;
+  if (!currentUser) return <AuthPage />;
 
   return (
     <BrowserRouter>

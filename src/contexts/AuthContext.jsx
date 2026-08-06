@@ -20,14 +20,14 @@ export function AuthProvider({ children }) {
           if (snap.exists()) {
             const data = snap.data();
             setAdminUid(data?.adminUid || null);
-            setSetupNeeded(false);
           } else {
-            // Brand new database instance with no settings doc
             setAdminUid(null);
-            setSetupNeeded(true);
           }
-        } catch {
+        } catch (err) {
+          console.error('getSettings error in AuthContext:', err);
           setAdminUid(null);
+        } finally {
+          setSetupNeeded(false);
         }
       } else {
         setAdminUid(null);
@@ -50,13 +50,6 @@ export function AuthProvider({ children }) {
 
   const isAdmin = currentUser != null && currentUser.uid === adminUid;
   const loading = currentUser === undefined;
-
-  /**
-   * Derive linked manager profile from the profiles collection.
-   * This is done reactively in useLiveData.js which watches profiles and sets
-   * linkedProfile / isManager on the Zustand store. AuthContext provides the
-   * auth primitives (currentUser, isAdmin), and the store provides isManager/linkedProfile.
-   */
 
   return (
     <AuthContext.Provider value={{ currentUser, isAdmin, loading, setupNeeded, signInWithGoogle, signOut, claimAdmin }}>
