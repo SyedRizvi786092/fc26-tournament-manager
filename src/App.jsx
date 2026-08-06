@@ -45,8 +45,7 @@ export default function App() {
     );
   }
 
-  if (!currentUser)  return <AuthPage />;
-  if (setupNeeded)   return <AdminSetupPage />;
+  if (!currentUser) return <AuthPage />;
 
   return (
     <BrowserRouter>

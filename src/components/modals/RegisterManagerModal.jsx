@@ -22,6 +22,8 @@ export default function RegisterManagerModal({
         userEmail: currentUser.email,
         userName: name,
       });
+    } catch (err) {
+      console.error("Failed to submit manager request:", err);
     } finally {
       setLoading(false);
     }
