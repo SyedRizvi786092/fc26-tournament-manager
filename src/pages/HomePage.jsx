@@ -8,12 +8,13 @@ import { generateFixtures } from '../logic/fixtures.js';
 import {
   saveTournament, deleteFromHistory, clearActiveTournament,
   updateAdminPresence, acceptTrade, rejectTrade, cancelTrade, markTradeRead,
-  saveProfile, sendManagerRequest, resolveManagerRequest,
+  saveProfile, sendManagerRequest, resolveManagerRequest, saveUserName,
 } from '../services/firestoreService.js';
 import PlayerSetupCard from '../components/setup/PlayerSetupCard.jsx';
 import ConfirmModal from '../components/modals/ConfirmModal.jsx';
 import NotificationsModal from '../components/modals/NotificationsModal.jsx';
 import RegisterManagerModal from '../components/modals/RegisterManagerModal.jsx';
+import FirstLoginNameModal from '../components/modals/FirstLoginNameModal.jsx';
 import EmptyState from '../components/ui/EmptyState.jsx';
 import Badge from '../components/ui/Badge.jsx';
 import { useEffect } from 'react';
@@ -23,13 +24,15 @@ export default function HomePage() {
   const {
     setup, setSetup, resetSetup, history, profiles, tournament, dataReady,
     setView, adminPresence, modal, openModal, closeModal,
-    trades, managerRequests, linkedProfile, isManager, tradeBannerDismissed, setTradeBannerDismissed,
+    trades, managerRequests, linkedProfile, isManager, userNames,
+    tradeBannerDismissed, setTradeBannerDismissed,
   } = useStore();
   const { isAdmin, currentUser } = useAuth();
   const toast = useToast();
 
   const [showNotifications, setShowNotifications] = useState(false);
   const [showRegisterModal, setShowRegisterModal] = useState(false);
+  const [showFirstLoginModal, setShowFirstLoginModal] = useState(true);
 
   // Set admin presence to paused when on Home Hub
   useEffect(() => {
@@ -215,6 +218,16 @@ export default function HomePage() {
     await sendManagerRequest(requestData);
     toast('Registration request submitted! 📩', 'ok');
   };
+
+  const handleSaveFirstLoginName = async (name) => {
+    if (currentUser) {
+      await saveUserName(currentUser.uid, name);
+      setShowFirstLoginModal(false);
+      toast(`Welcome, ${name}! 👋`, 'ok');
+    }
+  };
+
+  const needsFirstLoginName = currentUser && !isAdmin && !isManager && userNames && !userNames[currentUser.uid];
 
   // Find existing request for current user
   const userRequest = currentUser
@@ -426,6 +439,13 @@ export default function HomePage() {
           existingRequest={userRequest}
           onClose={() => setShowRegisterModal(false)}
           onSubmitRequest={handleSendManagerRequest}
+        />
+      )}
+
+      {needsFirstLoginName && showFirstLoginModal && (
+        <FirstLoginNameModal
+          defaultName={currentUser?.displayName || (currentUser?.email ? currentUser.email.split('@')[0] : '')}
+          onSave={handleSaveFirstLoginName}
         />
       )}
     </div>

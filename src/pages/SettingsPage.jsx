@@ -45,24 +45,21 @@ export default function SettingsPage() {
     return map;
   }, [profiles, history, tournament]);
 
-  // Current display name
-  const currentDisplayName = (currentUser && userNames?.[currentUser.uid]) || currentUser?.displayName || (currentUser?.email ? currentUser.email.split('@')[0] : 'User');
-
-  // Current active theme name
-  const currentThemePreset = THEME_PRESETS.find(
-    p => p.hex.toLowerCase() === (themeAccent || '#00c896').toLowerCase()
-  ) || THEME_PRESETS[0];
-
-  // User's manager registration request
-  const userRequest = currentUser
-    ? managerRequests.find(r => r.uid === currentUser.uid)
-    : null;
+  // Display name: For managers, it's their Manager Name. For non-managers, it's saved userName or Google name.
+  const currentDisplayName = (isManager && linkedProfile)
+    ? linkedProfile.managerName
+    : (currentUser && userNames?.[currentUser.uid]) || currentUser?.displayName || (currentUser?.email ? currentUser.email.split('@')[0] : 'User');
 
   // Handlers
   const handleSaveName = async (newName) => {
     if (!currentUser) return;
-    await saveUserName(currentUser.uid, newName);
-    toast('Display name updated ✓', 'ok');
+    if (isManager && linkedProfile) {
+      await saveProfile({ ...linkedProfile, managerName: newName });
+      toast('Manager name updated across the app ✓', 'ok');
+    } else {
+      await saveUserName(currentUser.uid, newName);
+      toast('Display name updated ✓', 'ok');
+    }
   };
 
   const handleSaveAvatar = async (newAvatar) => {

@@ -1,4 +1,4 @@
-import { useParams, Link } from 'react';
+import { useParams, Link } from 'react-router-dom';
 import { useMemo, useState } from 'react';
 import useStore from '../store/useStore.js';
 import { evaluateAllManagers, BADGE_CATALOG, TIER_META } from '../logic/achievements.js';

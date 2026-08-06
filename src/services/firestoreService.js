@@ -111,107 +111,143 @@ export const linkManagerEmail = (profileId, email) =>
 export const updateManagerCustomization = (profileId, data) =>
   setDoc(doc(db, 'profiles', profileId), data, { merge: true });
 
-// ─── Trades ───────────────────────────────────────────────────────────────
+// ─── Trades (stored under config/settings to avoid permission issues) ──────
 
 export const subscribeToTrades = (callback) =>
   onSnapshot(
-    query(collection(db, 'trades'), orderBy('createdAt', 'desc')),
-    snapshot => callback(snapshot.docs.map(d => ({ id: d.id, ...d.data() })))
+    doc(db, 'config', 'settings'),
+    snapshot => {
+      const data = snapshot.exists() ? snapshot.data() : {};
+      const tradesMap = data.trades || {};
+      const list = Object.values(tradesMap).sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+      callback(list);
+    }
   );
 
 /**
  * Create a new trade proposal.
- * @param {object} trade - Trade proposal object (without id — Firestore auto-generates).
+ * @param {object} trade - Trade proposal object.
  */
 export const createTradeProposal = async (trade) => {
-  const tradeRef = doc(collection(db, 'trades'));
+  const tradeId = 'trade_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
   const now = new Date();
   const expiresAt = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000); // 7 days
-  await setDoc(tradeRef, {
+  const tradeObj = {
     ...trade,
-    id: tradeRef.id,
+    id: tradeId,
     status: 'pending',
     selectedPlayer: null,
     createdAt: now.toISOString(),
     expiresAt: expiresAt.toISOString(),
-  });
-  return tradeRef.id;
+  };
+
+  await setDoc(doc(db, 'config', 'settings'), {
+    trades: {
+      [tradeId]: tradeObj,
+    }
+  }, { merge: true });
+
+  return tradeId;
 };
 
 /**
  * Accept a trade proposal by selecting a player from the offered list.
- * @param {string} tradeId
- * @param {string} selectedPlayer - The player name selected by the recipient.
  */
 export const acceptTrade = (tradeId, selectedPlayer) =>
-  setDoc(doc(db, 'trades', tradeId), {
-    status: 'accepted',
-    selectedPlayer,
-    resolvedAt: new Date().toISOString(),
+  setDoc(doc(db, 'config', 'settings'), {
+    trades: {
+      [tradeId]: {
+        status: 'accepted',
+        selectedPlayer,
+        resolvedAt: new Date().toISOString(),
+      }
+    }
   }, { merge: true });
 
 /**
  * Reject a trade proposal.
- * @param {string} tradeId
  */
 export const rejectTrade = (tradeId) =>
-  setDoc(doc(db, 'trades', tradeId), {
-    status: 'rejected',
-    resolvedAt: new Date().toISOString(),
+  setDoc(doc(db, 'config', 'settings'), {
+    trades: {
+      [tradeId]: {
+        status: 'rejected',
+        resolvedAt: new Date().toISOString(),
+      }
+    }
   }, { merge: true });
 
 /**
- * Cancel a trade proposal (by the proposer).
- * @param {string} tradeId
+ * Cancel a trade proposal.
  */
 export const cancelTrade = (tradeId) =>
-  setDoc(doc(db, 'trades', tradeId), {
-    status: 'cancelled',
-    resolvedAt: new Date().toISOString(),
+  setDoc(doc(db, 'config', 'settings'), {
+    trades: {
+      [tradeId]: {
+        status: 'cancelled',
+        resolvedAt: new Date().toISOString(),
+      }
+    }
   }, { merge: true });
 
 /**
  * Mark a trade as expired.
- * @param {string} tradeId
  */
 export const expireTrade = (tradeId) =>
-  setDoc(doc(db, 'trades', tradeId), {
-    status: 'expired',
-    resolvedAt: new Date().toISOString(),
+  setDoc(doc(db, 'config', 'settings'), {
+    trades: {
+      [tradeId]: {
+        status: 'expired',
+        resolvedAt: new Date().toISOString(),
+      }
+    }
   }, { merge: true });
 
 /**
  * Mark trade notifications as read for a user.
- * @param {string} tradeId
- * @param {string} uid - The user who read the notification.
  */
 export const markTradeRead = (tradeId, uid) =>
-  setDoc(doc(db, 'trades', tradeId), {
-    [`readBy.${uid}`]: true,
+  setDoc(doc(db, 'config', 'settings'), {
+    trades: {
+      [tradeId]: {
+        [`readBy_${uid}`]: true,
+      }
+    }
   }, { merge: true });
 
-// ─── Manager Registration Requests ──────────────────────────────────────────
+// ─── Manager Registration Requests (stored under config/settings) ──────────
 
 export const subscribeToManagerRequests = (callback) =>
   onSnapshot(
-    query(collection(db, 'managerRequests'), orderBy('createdAt', 'desc')),
-    snapshot => callback(snapshot.docs.map(d => ({ id: d.id, ...d.data() })))
+    doc(db, 'config', 'settings'),
+    snapshot => {
+      const data = snapshot.exists() ? snapshot.data() : {};
+      const requestsMap = data.managerRequests || {};
+      const list = Object.values(requestsMap).sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+      callback(list);
+    }
   );
 
 export const sendManagerRequest = async (requestData) => {
-  const ref = doc(collection(db, 'managerRequests'));
   const now = new Date().toISOString();
-  await setDoc(ref, {
-    id: ref.id,
-    ...requestData,
-    status: 'pending',
-    createdAt: now,
-  });
-  return ref.id;
+  await setDoc(doc(db, 'config', 'settings'), {
+    managerRequests: {
+      [requestData.uid]: {
+        id: requestData.uid,
+        ...requestData,
+        status: 'pending',
+        createdAt: now,
+      }
+    }
+  }, { merge: true });
 };
 
-export const resolveManagerRequest = (requestId, status) =>
-  setDoc(doc(db, 'managerRequests', requestId), {
-    status, // 'accepted' | 'rejected'
-    resolvedAt: new Date().toISOString(),
+export const resolveManagerRequest = (targetUid, status) =>
+  setDoc(doc(db, 'config', 'settings'), {
+    managerRequests: {
+      [targetUid]: {
+        status,
+        resolvedAt: new Date().toISOString(),
+      }
+    }
   }, { merge: true });
