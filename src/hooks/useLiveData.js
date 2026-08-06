@@ -7,7 +7,6 @@ import {
   subscribeToProfiles,
   subscribeToSettings,
   subscribeToTrades,
-  subscribeToManagerRequests,
   expireTrade,
 } from '../services/firestoreService.js';
 import { migrateProfileShape } from '../logic/migrateProfile.js';
@@ -87,6 +86,11 @@ export function useLiveData() {
       if (settings?.userNames) {
         setUserNames(settings.userNames);
       }
+      if (settings?.managerRequests) {
+        setManagerRequests(settings.managerRequests);
+      } else {
+        setManagerRequests([]);
+      }
 
       // Real-time sync user's personal cloud theme accent across all devices logged into this account
       if (currentUser && settings?.userThemes?.[currentUser.uid]) {
@@ -108,11 +112,6 @@ export function useLiveData() {
       setTrades(trades);
     });
 
-    // Subscribe to manager registration requests
-    const unsubMR = subscribeToManagerRequests(requests => {
-      setManagerRequests(requests);
-    });
-
-    return () => { unsubT(); unsubH(); unsubP(); unsubS(); unsubTr(); unsubMR(); };
+    return () => { unsubT(); unsubH(); unsubP(); unsubS(); unsubTr(); };
   }, [currentUser, setTournament, setHistory, setProfiles, setAdminPresence, setThemeAccent, setUserNames, setDataReady, setTrades, setManagerRequests, setLinkedProfile]);
 }

@@ -138,7 +138,6 @@ export default function HistoryPage() {
           {filteredTournaments.length ? (
             filteredTournaments.map(h => {
               const champ = h.players.find(p => p.id === h.champion);
-              const champName = champ ? (profiles.find(pr => pr.id === champ.profileId)?.managerName || champ.name) : 'N/A';
               const legs = h.legs || (h.fixtures?.filter(f => f.phase === 'league').length >= (h.players.length === 3 ? 6 : h.players.length === 4 ? 12 : 20) ? 2 : 1);
 
               return (
@@ -151,7 +150,7 @@ export default function HistoryPage() {
                   <div className="history-info">
                     <div className="history-name">{h.name}</div>
                     <div className="history-meta">
-                      Champion: {champ ? `${champName} – ${champ.teamName}` : 'N/A'}
+                      Champion: {champ ? `${champ.name} – ${champ.teamName}` : 'N/A'}
                       &ensp;·&ensp;{h.players.length} players
                       &ensp;·&ensp;{legs} Leg{legs > 1 ? 's' : ''}
                       &ensp;·&ensp;{new Date(h.createdAt).toLocaleDateString()}

@@ -131,7 +131,7 @@ function ManualHistoryDetails({ t }) {
 export default function HistoryDetailsPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { historyTab, setHistoryTab, history, tournament, profiles, openModal } = useStore();
+  const { historyTab, setHistoryTab, history, tournament, openModal } = useStore();
   const { isAdmin } = useAuth();
   const toast = useToast();
 
@@ -140,15 +140,7 @@ export default function HistoryDetailsPage() {
     setHistoryTab('result');
   }, [id, setHistoryTab]);
 
-  const rawT = history.find(h => h.id === id) || (tournament?.id === id ? tournament : null);
-
-  const t = rawT ? {
-    ...rawT,
-    players: (rawT.players || []).map(p => {
-      const prof = (profiles || []).find(pr => pr.id === p.profileId);
-      return prof && prof.managerName ? { ...p, name: prof.managerName } : p;
-    })
-  } : null;
+  const t = history.find(h => h.id === id) || (tournament?.id === id ? tournament : null);
 
   if (!t) return <div className="empty-state"><h3>Tournament Not Found</h3><Link to="/history" className="btn btn-secondary" style={{ marginTop: 12 }}>Back to History</Link></div>;
 

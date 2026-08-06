@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState } from 'react';
-import { onAuthStateChanged, signInWithPopup, signOut as firebaseSignOut, updateProfile } from 'firebase/auth';
+import { onAuthStateChanged, signInWithPopup, signOut as firebaseSignOut } from 'firebase/auth';
 import { auth, googleProvider } from '../firebase.js';
 import { getSettings, saveSettings } from '../services/firestoreService.js';
 
@@ -17,20 +17,17 @@ export function AuthProvider({ children }) {
       if (user) {
         try {
           const snap = await getSettings();
-          if (snap.exists() && snap.data()?.adminUid) {
-            setAdminUid(snap.data().adminUid);
+          if (snap.exists()) {
+            const { adminUid: storedUid } = snap.data();
+            setAdminUid(storedUid);
             setSetupNeeded(false);
-          } else if (!snap.exists()) {
+          } else {
+            // No config yet — first run, let this user claim admin
             setAdminUid(null);
             setSetupNeeded(true);
-          } else {
-            setAdminUid(null);
-            setSetupNeeded(false);
           }
-        } catch (err) {
-          console.error("AuthContext settings error:", err);
+        } catch {
           setAdminUid(null);
-          setSetupNeeded(false);
         }
       } else {
         setAdminUid(null);
@@ -61,14 +58,8 @@ export function AuthProvider({ children }) {
    * auth primitives (currentUser, isAdmin), and the store provides isManager/linkedProfile.
    */
 
-  const updateUserDisplayName = async (newName) => {
-    if (!auth.currentUser) return;
-    await updateProfile(auth.currentUser, { displayName: newName }).catch(() => {});
-    setCurrentUser({ ...auth.currentUser, displayName: newName });
-  };
-
   return (
-    <AuthContext.Provider value={{ currentUser, isAdmin, loading, setupNeeded, signInWithGoogle, signOut, claimAdmin, updateUserDisplayName }}>
+    <AuthContext.Provider value={{ currentUser, isAdmin, loading, setupNeeded, signInWithGoogle, signOut, claimAdmin }}>
       {children}
     </AuthContext.Provider>
   );

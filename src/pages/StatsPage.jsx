@@ -13,7 +13,7 @@ import {
 } from '../logic/statsCalculator.js';
 
 export default function StatsPage() {
-  const { history, tournament, profiles } = useStore();
+  const { history, tournament } = useStore();
   const [showStats, setShowStats] = useState(false); // Hidden by default
   const [activeTab, setActiveTab] = useState('performance'); // performance | goals | h2h | clutch | discipline
 
@@ -21,18 +21,18 @@ export default function StatsPage() {
   const [goalSortKey, setGoalSortKey] = useState('GF'); // GF | GA | GD | avgGF
 
   // H2H Manager Selection State
-  const allManagers = getAllManagerNames(history, tournament, profiles);
+  const allManagers = getAllManagerNames(history, tournament);
   const [managerA, setManagerA] = useState(allManagers[0] || '');
   const [managerB, setManagerB] = useState(allManagers[1] || allManagers[0] || '');
 
   // Calculate Data
-  const lifetime = getLifetimeStandings(history, tournament, profiles);
-  const perf     = getPerformanceStats(history, tournament, profiles);
-  const goalData = getGoalStats(history, tournament, profiles);
-  const h2hData  = getH2HStats(managerA, managerB, history, tournament, profiles);
-  const rivalry  = getFiercestRivalry(history, tournament, profiles);
-  const clutch   = getClutchStats(history, tournament, profiles);
-  const disc     = getDisciplineStats(history, tournament, profiles);
+  const lifetime = getLifetimeStandings(history, tournament);
+  const perf     = getPerformanceStats(history, tournament);
+  const goalData = getGoalStats(history, tournament);
+  const h2hData  = getH2HStats(managerA, managerB, history, tournament);
+  const rivalry  = getFiercestRivalry(history, tournament);
+  const clutch   = getClutchStats(history, tournament);
+  const disc     = getDisciplineStats(history, tournament);
 
   // Sorted Goal Machine
   const sortedGoalMachine = [...goalData.goalMachine].sort((a, b) => {

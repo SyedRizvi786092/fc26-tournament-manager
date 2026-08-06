@@ -26,7 +26,7 @@ export default function SettingsPage() {
     userNames, modal, openModal, closeModal, linkedProfile, isManager,
     managerRequests,
   } = useStore();
-  const { isAdmin, signOut, currentUser, updateUserDisplayName } = useAuth();
+  const { isAdmin, signOut, currentUser } = useAuth();
   const toast = useToast();
 
   const [editProfileModal, setEditProfileModal] = useState(null);
@@ -45,10 +45,8 @@ export default function SettingsPage() {
     return map;
   }, [profiles, history, tournament]);
 
-  // Display name: For managers, it's their Manager Name. For non-managers, it's saved userName or Google name.
-  const currentDisplayName = (isManager && linkedProfile)
-    ? linkedProfile.managerName
-    : (currentUser && userNames?.[currentUser.uid]) || currentUser?.displayName || (currentUser?.email ? currentUser.email.split('@')[0] : 'User');
+  // Current display name
+  const currentDisplayName = (currentUser && userNames?.[currentUser.uid]) || currentUser?.displayName || (currentUser?.email ? currentUser.email.split('@')[0] : 'User');
 
   // Current active theme name
   const currentThemePreset = THEME_PRESETS.find(
@@ -63,14 +61,8 @@ export default function SettingsPage() {
   // Handlers
   const handleSaveName = async (newName) => {
     if (!currentUser) return;
-    if (isManager && linkedProfile) {
-      await saveProfile({ ...linkedProfile, managerName: newName });
-      toast('Manager name updated across the app ✓', 'ok');
-    } else {
-      await saveUserName(currentUser.uid, newName);
-      await updateUserDisplayName(newName);
-      toast('Display name updated ✓', 'ok');
-    }
+    await saveUserName(currentUser.uid, newName);
+    toast('Display name updated ✓', 'ok');
   };
 
   const handleSaveAvatar = async (newAvatar) => {
