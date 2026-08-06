@@ -6,6 +6,8 @@ import {
   subscribeToHistory,
   subscribeToProfiles,
   subscribeToSettings,
+  subscribeToTrades,
+  expireTrade,
 } from '../services/firestoreService.js';
 import { migrateProfileShape } from '../logic/migrateProfile.js';
 import { patchHistoryPenaltyScores } from '../logic/patchHistory.js';
@@ -16,7 +18,10 @@ import { applyThemeAccent } from '../logic/theme.js';
  * Called once at the app root after auth is confirmed.
  */
 export function useLiveData() {
-  const { setTournament, setHistory, setProfiles, setAdminPresence, setThemeAccent, setDataReady } = useStore();
+  const {
+    setTournament, setHistory, setProfiles, setAdminPresence,
+    setThemeAccent, setDataReady, setTrades, setLinkedProfile,
+  } = useStore();
   const { currentUser } = useAuth();
 
   // Track previous tournament status to detect status transitions
@@ -60,7 +65,19 @@ export function useLiveData() {
     });
 
     const unsubP = subscribeToProfiles(profiles => {
-      setProfiles(profiles.map(migrateProfileShape));
+      const migrated = profiles.map(migrateProfileShape);
+      setProfiles(migrated);
+
+      // Derive linked profile for the current user
+      if (currentUser?.email) {
+        const userEmail = currentUser.email.trim().toLowerCase();
+        const linked = migrated.find(
+          p => p.linkedEmail && p.linkedEmail.trim().toLowerCase() === userEmail
+        ) || null;
+        setLinkedProfile(linked);
+      } else {
+        setLinkedProfile(null);
+      }
     });
 
     const unsubS = subscribeToSettings(settings => {
@@ -75,6 +92,17 @@ export function useLiveData() {
       }
     });
 
-    return () => { unsubT(); unsubH(); unsubP(); unsubS(); };
-  }, [currentUser, setTournament, setHistory, setProfiles, setAdminPresence, setThemeAccent, setDataReady]);
+    // Subscribe to trades — auto-expire stale pending trades
+    const unsubTr = subscribeToTrades(trades => {
+      const now = new Date();
+      trades.forEach(trade => {
+        if (trade.status === 'pending' && trade.expiresAt && new Date(trade.expiresAt) < now) {
+          expireTrade(trade.id);
+        }
+      });
+      setTrades(trades);
+    });
+
+    return () => { unsubT(); unsubH(); unsubP(); unsubS(); unsubTr(); };
+  }, [currentUser, setTournament, setHistory, setProfiles, setAdminPresence, setThemeAccent, setDataReady, setTrades, setLinkedProfile]);
 }

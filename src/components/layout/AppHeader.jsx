@@ -55,7 +55,7 @@ export default function AppHeader() {
         <div className="header-actions">
           <div className="header-action-btns">
             <Link to="/stats" className="btn btn-sm btn-secondary">📊 Stats</Link>
-            <Link to="/teams" className="btn btn-sm btn-secondary">⚙️ Teams</Link>
+            <Link to="/settings" className="btn btn-sm btn-secondary">⚙️ Settings</Link>
           </div>
         </div>
       </div>

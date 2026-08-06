@@ -15,6 +15,16 @@ const useStore = create((set, get) => ({
   themeAccent:   '#00c896', // accent color hex from config/settings
   dataReady:     false, // true once tournament + history listeners have each fired once
 
+  // ─── Trades (synced from Firestore) ────────────────────────────────────
+  trades: [],           // trades collection (all statuses)
+
+  // ─── Manager Profile Linking ───────────────────────────────────────────
+  linkedProfile:  null, // the profile object linked to the current user (via email)
+  isManager:      false, // true if the current user has a linked profile
+
+  // ─── Trade Banner Dismissal ────────────────────────────────────────────
+  tradeBannerDismissed: false,
+
   // ─── Modal ───────────────────────────────────────────────────────────────
   modal: null,
 
@@ -43,6 +53,9 @@ const useStore = create((set, get) => ({
   setAdminPresence: (p) => set({ adminPresence: p }),
   setThemeAccent:   (c) => set({ themeAccent: c }),
   setDataReady:     (v) => set({ dataReady: v }),
+  setTrades:        (t) => set({ trades: t }),
+  setLinkedProfile: (p) => set({ linkedProfile: p, isManager: !!p }),
+  setTradeBannerDismissed: (v) => set({ tradeBannerDismissed: v }),
 
   // ─── Actions: Modal ──────────────────────────────────────────────────────
   openModal:  (modal) => set({ modal }),

@@ -1,6 +1,6 @@
 import {
-  doc, collection, setDoc, getDoc, deleteDoc,
-  onSnapshot, query, orderBy,
+  doc, collection, setDoc, getDoc, deleteDoc, updateDoc,
+  onSnapshot, query, orderBy, where, Timestamp,
 } from 'firebase/firestore';
 import { db } from '../firebase.js';
 
@@ -61,6 +61,17 @@ export const addToHistory = (tournament) =>
 export const deleteFromHistory = (id) =>
   deleteDoc(doc(db, 'history', id));
 
+/**
+ * Batch-update history entries with profileId tags (one-time migration).
+ * @param {Array} updatedEntries - Array of { id, ...tournamentData } objects with profileId fields added to players.
+ */
+export const batchUpdateHistory = async (updatedEntries) => {
+  const promises = updatedEntries.map(entry =>
+    setDoc(doc(db, 'history', entry.id), entry)
+  );
+  await Promise.all(promises);
+};
+
 // ─── Profiles ─────────────────────────────────────────────────────────────
 
 export const subscribeToProfiles = (callback) =>
@@ -73,3 +84,101 @@ export const saveProfile = (profile) =>
 
 export const deleteProfile = (id) =>
   deleteDoc(doc(db, 'profiles', id));
+
+/**
+ * Link a Google email address to a manager profile.
+ * @param {string} profileId - The profile document ID.
+ * @param {string} email - The Google email to link.
+ */
+export const linkManagerEmail = (profileId, email) =>
+  setDoc(doc(db, 'profiles', profileId), {
+    linkedEmail: email.trim().toLowerCase(),
+    role: 'manager',
+  }, { merge: true });
+
+/**
+ * Update manager customization fields (avatar, favoriteTeamId).
+ * @param {string} profileId
+ * @param {object} data - { avatar?: string, favoriteTeamId?: string }
+ */
+export const updateManagerCustomization = (profileId, data) =>
+  setDoc(doc(db, 'profiles', profileId), data, { merge: true });
+
+// ─── Trades ───────────────────────────────────────────────────────────────
+
+export const subscribeToTrades = (callback) =>
+  onSnapshot(
+    query(collection(db, 'trades'), orderBy('createdAt', 'desc')),
+    snapshot => callback(snapshot.docs.map(d => ({ id: d.id, ...d.data() })))
+  );
+
+/**
+ * Create a new trade proposal.
+ * @param {object} trade - Trade proposal object (without id — Firestore auto-generates).
+ */
+export const createTradeProposal = async (trade) => {
+  const tradeRef = doc(collection(db, 'trades'));
+  const now = new Date();
+  const expiresAt = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000); // 7 days
+  await setDoc(tradeRef, {
+    ...trade,
+    id: tradeRef.id,
+    status: 'pending',
+    selectedPlayer: null,
+    createdAt: now.toISOString(),
+    expiresAt: expiresAt.toISOString(),
+  });
+  return tradeRef.id;
+};
+
+/**
+ * Accept a trade proposal by selecting a player from the offered list.
+ * @param {string} tradeId
+ * @param {string} selectedPlayer - The player name selected by the recipient.
+ */
+export const acceptTrade = (tradeId, selectedPlayer) =>
+  setDoc(doc(db, 'trades', tradeId), {
+    status: 'accepted',
+    selectedPlayer,
+    resolvedAt: new Date().toISOString(),
+  }, { merge: true });
+
+/**
+ * Reject a trade proposal.
+ * @param {string} tradeId
+ */
+export const rejectTrade = (tradeId) =>
+  setDoc(doc(db, 'trades', tradeId), {
+    status: 'rejected',
+    resolvedAt: new Date().toISOString(),
+  }, { merge: true });
+
+/**
+ * Cancel a trade proposal (by the proposer).
+ * @param {string} tradeId
+ */
+export const cancelTrade = (tradeId) =>
+  setDoc(doc(db, 'trades', tradeId), {
+    status: 'cancelled',
+    resolvedAt: new Date().toISOString(),
+  }, { merge: true });
+
+/**
+ * Mark a trade as expired.
+ * @param {string} tradeId
+ */
+export const expireTrade = (tradeId) =>
+  setDoc(doc(db, 'trades', tradeId), {
+    status: 'expired',
+    resolvedAt: new Date().toISOString(),
+  }, { merge: true });
+
+/**
+ * Mark trade notifications as read for a user.
+ * @param {string} tradeId
+ * @param {string} uid - The user who read the notification.
+ */
+export const markTradeRead = (tradeId, uid) =>
+  setDoc(doc(db, 'trades', tradeId), {
+    [`readBy.${uid}`]: true,
+  }, { merge: true });

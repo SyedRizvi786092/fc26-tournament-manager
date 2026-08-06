@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import useStore from '../store/useStore.js';
 import { useAuth } from '../contexts/AuthContext.jsx';
@@ -6,20 +7,27 @@ import { uid } from '../logic/uid.js';
 import { generateFixtures } from '../logic/fixtures.js';
 import {
   saveTournament, deleteFromHistory, clearActiveTournament,
-  updateAdminPresence,
+  updateAdminPresence, acceptTrade, rejectTrade, cancelTrade, markTradeRead,
+  saveProfile,
 } from '../services/firestoreService.js';
 import PlayerSetupCard from '../components/setup/PlayerSetupCard.jsx';
 import ConfirmModal from '../components/modals/ConfirmModal.jsx';
+import NotificationsModal from '../components/modals/NotificationsModal.jsx';
 import EmptyState from '../components/ui/EmptyState.jsx';
 import Badge from '../components/ui/Badge.jsx';
 import { useEffect } from 'react';
 
 export default function HomePage() {
   const navigate = useNavigate();
-  const { setup, setSetup, resetSetup, history, profiles, tournament, dataReady,
-          setView, adminPresence, modal, openModal, closeModal } = useStore();
-  const { isAdmin } = useAuth();
+  const {
+    setup, setSetup, resetSetup, history, profiles, tournament, dataReady,
+    setView, adminPresence, modal, openModal, closeModal,
+    trades, linkedProfile, isManager, tradeBannerDismissed, setTradeBannerDismissed,
+  } = useStore();
+  const { isAdmin, currentUser } = useAuth();
   const toast = useToast();
+
+  const [showNotifications, setShowNotifications] = useState(false);
 
   // Set admin presence to paused when on Home Hub
   useEffect(() => {
@@ -50,7 +58,19 @@ export default function HomePage() {
       const mgr = (p.managerName || '').trim(), club = (p.clubName || '').trim();
       if (!mgr)  { toast(`Player ${i + 1}: manager name required!`, 'err'); return; }
       if (!club) { toast(`Player ${i + 1}: club name required!`, 'err'); return; }
-      players.push({ id: uid(), name: mgr, teamName: club, squad: (p.squad || []).map(s => ({ id: uid(), name: s })) });
+
+      // Auto-tag profileId if a saved profile matches this manager name
+      const matchedProfile = profiles.find(pr =>
+        pr.managerName.trim().toLowerCase() === mgr.toLowerCase()
+      );
+
+      players.push({
+        id: uid(),
+        name: mgr,
+        teamName: club,
+        squad: (p.squad || []).map(s => ({ id: uid(), name: s })),
+        ...(matchedProfile ? { profileId: matchedProfile.id } : {}),
+      });
     }
     const names = players.map(p => p.name.toLowerCase());
     if (new Set(names).size !== names.length) { toast('Manager names must be unique!', 'err'); return; }
@@ -104,6 +124,57 @@ export default function HomePage() {
     });
   };
 
+  // ─── Trade Handlers ─────────────────────────────────────────────────────
+  const handleAcceptTrade = async (tradeId, selectedPlayer) => {
+    const trade = trades.find(t => t.id === tradeId);
+    if (!trade) return;
+
+    // Execute the swap in profiles
+    const fromProfile = profiles.find(p => p.id === trade.fromProfileId);
+    const toProfile = profiles.find(p => p.id === trade.toProfileId);
+    if (!fromProfile || !toProfile) return;
+
+    // Remove selectedPlayer from proposer's team, add wantedPlayer
+    const updatedFromProfile = { ...fromProfile, teams: fromProfile.teams.map(team => {
+      if (team.id !== trade.offeredFromTeamId) return team;
+      return {
+        ...team,
+        squad: team.squad.filter(s => s !== selectedPlayer).concat(trade.wantedPlayer),
+      };
+    })};
+
+    // Remove wantedPlayer from recipient's team, add selectedPlayer
+    const updatedToProfile = { ...toProfile, teams: toProfile.teams.map(team => {
+      if (team.id !== trade.wantedFromTeamId) return team;
+      return {
+        ...team,
+        squad: team.squad.filter(s => s !== trade.wantedPlayer).concat(selectedPlayer),
+      };
+    })};
+
+    await saveProfile(updatedFromProfile);
+    await saveProfile(updatedToProfile);
+    await acceptTrade(tradeId, selectedPlayer);
+    toast(`Trade completed! ${trade.wantedPlayer} ⇄ ${selectedPlayer} ✓`, 'ok');
+  };
+
+  const handleRejectTrade = async (tradeId) => {
+    await rejectTrade(tradeId);
+    toast('Trade rejected', 'ok');
+  };
+
+  const handleCancelTrade = async (tradeId) => {
+    await cancelTrade(tradeId);
+    toast('Trade cancelled', 'ok');
+  };
+
+  const handleMarkRead = async (tradeId) => {
+    if (currentUser) {
+      await markTradeRead(tradeId, currentUser.uid);
+    }
+  };
+
+  // ─── Computed Data ──────────────────────────────────────────────────────
   // Collect all in-progress tournaments
   const inProgressTournaments = [];
   if (tournament && tournament.status !== 'complete') {
@@ -113,19 +184,73 @@ export default function HomePage() {
     inProgressTournaments.push(h);
   });
 
+  // Pending incoming trades for the current linked manager
+  const pendingIncoming = linkedProfile
+    ? trades.filter(t =>
+        t.status === 'pending' &&
+        t.toProfileId === linkedProfile.id &&
+        (!t.expiresAt || new Date(t.expiresAt) > new Date())
+      )
+    : [];
+
+  // Unread notification count (pending trades where current user hasn't read)
+  const unreadCount = currentUser
+    ? trades.filter(t => {
+        if (t.status !== 'pending') return false;
+        if (!t.expiresAt || new Date(t.expiresAt) > new Date()) {
+          const isRelevant = linkedProfile && (
+            t.toProfileId === linkedProfile.id ||
+            t.fromProfileId === linkedProfile.id
+          );
+          if (!isRelevant) return false;
+          return !t.readBy?.[currentUser.uid];
+        }
+        return false;
+      }).length
+    : 0;
+
   return (
     <div id="setup-screen">
       <div className="setup-hero">
         <div className="setup-icon">⚽</div>
         <h1>FC 26 <span>Tournament</span> Manager</h1>
         <p>Real-time tournament tracking &amp; standings</p>
+
+        {/* Top-right action icons */}
+        <div className="home-top-actions">
+          <button
+            className="icon-btn"
+            onClick={() => setShowNotifications(true)}
+            title="Notifications"
+            style={{ position: 'relative' }}
+          >
+            🔔
+            {unreadCount > 0 && (
+              <span className="notif-badge">{unreadCount}</span>
+            )}
+          </button>
+          <Link to="/settings" className="icon-btn" title="Settings">
+            ⚙️
+          </Link>
+        </div>
       </div>
 
       <div style={{ display: 'flex', gap: 12, justifyContent: 'center', marginBottom: 24, flexWrap: 'wrap' }}>
-        <Link to="/stats" className="btn btn-secondary">📊 Leaderboard &amp; Stats</Link>
-        <Link to="/teams" className="btn btn-secondary">👥 Teams &amp; Settings</Link>
         <Link to="/history" className="btn btn-secondary">🏆 Tournament History</Link>
+        <Link to="/stats" className="btn btn-secondary">📊 Leaderboard &amp; Stats</Link>
+        <Link to="/hall-of-fame" className="btn btn-secondary">🏛️ Hall of Fame</Link>
       </div>
+
+      {/* Trade notification banner */}
+      {pendingIncoming.length > 0 && !tradeBannerDismissed && (
+        <div className="trade-banner" style={{ maxWidth: 720, margin: '0 auto 20px' }}>
+          <span>📬 You have {pendingIncoming.length} pending trade proposal{pendingIncoming.length > 1 ? 's' : ''}</span>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button className="btn btn-sm btn-primary" onClick={() => setShowNotifications(true)}>View</button>
+            <button className="btn btn-sm btn-secondary" onClick={() => setTradeBannerDismissed(true)}>✕</button>
+          </div>
+        </div>
+      )}
 
       {/* SECTION 1: IN PROGRESS TOURNAMENTS */}
       <div className="setup-card" style={{ maxWidth: 720 }}>
@@ -219,8 +344,8 @@ export default function HomePage() {
           <div className="setup-card" style={{ maxWidth: 720 }}>
             <div className="setup-card-title" style={{ justifyContent: 'space-between' }}>
               Player &amp; Squad Registration
-              <Link to="/teams" className="btn btn-sm btn-secondary"
-                style={{ textTransform: 'none', letterSpacing: 0, fontSize: 13 }}>⚙️ Teams &amp; Settings</Link>
+              <Link to="/settings" className="btn btn-sm btn-secondary"
+                style={{ textTransform: 'none', letterSpacing: 0, fontSize: 13 }}>⚙️ Settings</Link>
             </div>
             {profiles.length > 0 && (
               <p style={{ fontSize: 13, color: 'var(--t2)', marginBottom: 16 }}>
@@ -248,6 +373,20 @@ export default function HomePage() {
       )}
 
       {modal?.type === 'confirm' && <ConfirmModal modal={modal} onClose={closeModal} />}
+
+      {showNotifications && (
+        <NotificationsModal
+          trades={trades}
+          linkedProfile={linkedProfile}
+          profiles={profiles}
+          currentUser={currentUser}
+          onClose={() => setShowNotifications(false)}
+          onAcceptTrade={handleAcceptTrade}
+          onRejectTrade={handleRejectTrade}
+          onCancelTrade={handleCancelTrade}
+          onMarkRead={handleMarkRead}
+        />
+      )}
     </div>
   );
 }

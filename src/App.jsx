@@ -6,9 +6,11 @@ import AdminSetupPage from './pages/AdminSetupPage.jsx';
 import HomePage from './pages/HomePage.jsx';
 import HistoryPage from './pages/HistoryPage.jsx';
 import HistoryDetailsPage from './pages/HistoryDetailsPage.jsx';
-import ProfilesPage from './pages/ProfilesPage.jsx';
+import SettingsPage from './pages/SettingsPage.jsx';
 import StatsPage from './pages/StatsPage.jsx';
 import MainPage from './pages/MainPage.jsx';
+import HallOfFamePage from './pages/HallOfFamePage.jsx';
+import ManagerProfilePage from './pages/ManagerProfilePage.jsx';
 
 function AppRoutes() {
   useLiveData(); // start all Firestore listeners
@@ -19,7 +21,10 @@ function AppRoutes() {
       <Route path="/history" element={<HistoryPage />} />
       <Route path="/history/:id" element={<HistoryDetailsPage />} />
       <Route path="/stats" element={<StatsPage />} />
-      <Route path="/teams" element={<ProfilesPage />} />
+      <Route path="/settings" element={<SettingsPage />} />
+      <Route path="/teams" element={<Navigate to="/settings" replace />} />
+      <Route path="/hall-of-fame" element={<HallOfFamePage />} />
+      <Route path="/profile/:id" element={<ManagerProfilePage />} />
       <Route path="/tournament/:id" element={<MainPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
