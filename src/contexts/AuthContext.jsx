@@ -17,12 +17,12 @@ export function AuthProvider({ children }) {
       if (user) {
         try {
           const snap = await getSettings();
-          if (snap.exists()) {
+          if (snap.exists() && snap.data()?.adminUid) {
             const { adminUid: storedUid } = snap.data();
             setAdminUid(storedUid);
             setSetupNeeded(false);
           } else {
-            // No config yet — first run, let this user claim admin
+            // No admin set up yet — first run
             setAdminUid(null);
             setSetupNeeded(true);
           }
